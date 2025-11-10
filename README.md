@@ -1,33 +1,30 @@
-# CashVault
+# CashVault app design
 
-**Save smarter. Invest better. Live better.**
-[Visit app →](https://cashvaultapp.vercel.app)
+*Automatically synced with your [v0.app](https://v0.app) deployments*
 
----
+[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design)
+[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/o2UUoCkVV5b)
 
-## 🚀 Overview
+## Overview
 
-CashVault helps you **control spending**, **build savings**, and **invest consistently** — all in one place.
+This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
+Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
 
-### 💰 Safe Lock
+## Deployment
 
-Lock funds for up to 6 months to prevent impulsive spending.
-**You set:** amount, duration, start date, and re-lock option.
+Your project is live at:
 
-### 🎯 Targeted Savings
+**[https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design](https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design)**
 
-Save toward goals like education, immigration, or a new startup.
-**You set:** goal name, target amount, deadline, and contribution frequency.
+## Build your app
 
-### 📈 DCA Investing
+Continue building your app on:
 
-Automate crypto investments (BTC, ETH, STX) at regular intervals.
-**You set:** asset, amount, frequency, start date, and duration.
+**[https://v0.app/chat/o2UUoCkVV5b](https://v0.app/chat/o2UUoCkVV5b)**
 
----
+## How It Works
 
-## 🔒 Why CashVault
-
-* Builds saving discipline
-* Simplifies investing
-* Keeps your money secure and your goals on track
+1. Create and modify your project using [v0.app](https://v0.app)
+2. Deploy your chats from the v0 interface
+3. Changes are automatically pushed to this repository
+4. Vercel deploys the latest version from this repository
