@@ -51,15 +51,30 @@ export function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
     }
   }
 
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose()
+    }
+  }
+
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-      <div className="bg-[#0a1628] border border-gray-800 rounded-lg max-w-md w-full p-8 relative">
-        <button onClick={onClose} className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors">
+    <div
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-[9999] p-4 overflow-y-auto"
+      onClick={handleBackdropClick}
+    >
+      <div className="bg-[#0a1628] border border-gray-800 rounded-lg max-w-md w-full p-6 sm:p-8 relative my-8">
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-400 hover:text-white transition-colors touch-manipulation"
+          type="button"
+        >
           <X size={24} />
         </button>
 
-        <h2 className="text-3xl font-bold text-white mb-2">Join the Waitlist</h2>
-        <p className="text-gray-400 mb-6">Be the first to know when CashVault launches. Save smarter, not harder.</p>
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">Join the Waitlist</h2>
+        <p className="text-gray-400 mb-6 text-sm sm:text-base">
+          Be the first to know when CashVault launches. Save smarter, not harder.
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -71,7 +86,7 @@ export function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="w-full px-4 py-3 bg-[#0f1f3a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#c0ff00] transition-colors"
+              className="w-full px-4 py-3 bg-[#0f1f3a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#c0ff00] transition-colors text-base"
               placeholder="Your name"
             />
           </div>
@@ -86,7 +101,7 @@ export function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-[#0f1f3a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#c0ff00] transition-colors"
+              className="w-full px-4 py-3 bg-[#0f1f3a] border border-gray-700 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:border-[#c0ff00] transition-colors text-base"
               placeholder="your@email.com"
             />
           </div>
@@ -106,7 +121,7 @@ export function WaitlistModal({ isOpen, onClose }: WaitlistModalProps) {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#c0ff00] text-[#0a1628] hover:bg-[#d4ff33] font-bold py-6 text-lg"
+            className="w-full bg-[#c0ff00] text-[#0a1628] hover:bg-[#d4ff33] font-bold py-6 text-lg touch-manipulation"
           >
             {loading ? "Joining..." : "Join Waitlist"}
           </Button>
