@@ -11,6 +11,7 @@ export const metadata: Metadata = {
   title: "CashVault - Save, Secure, and Grow Your Finances",
   description:
     "The savings-first platform built to help you lock your money, save toward your goals, and build wealth through disciplined saving and DCA strategies.",
+  generator: "v0.app",
   openGraph: {
     title: "CashVault - Save, Secure, and Grow Your Finances",
     description:

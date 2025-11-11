@@ -63,6 +63,14 @@ export function Footer() {
                   Contact
                 </a>
               </li>
+              <li>
+                <Link
+                  href="/admin/waitlist"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Admin Dashboard
+                </Link>
+              </li>
             </ul>
           </div>
 
