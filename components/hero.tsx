@@ -3,7 +3,7 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ArrowRight } from "lucide-react"
-import { WaitlistModal } from "./waitlist-modal"
+import Link from "next/link"
 
 export function Hero() {
   const [isWaitlistOpen, setIsWaitlistOpen] = useState(false)
@@ -30,14 +30,15 @@ export function Hero() {
               >
                 Test Beta
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => setIsWaitlistOpen(true)}
-                className="bg-transparent border-2 border-border text-foreground hover:bg-secondary font-bold px-10 py-7 text-xl rounded-lg w-full sm:w-auto"
-              >
-                Join Waitlist
-              </Button>
+              <Link href="/waitlist" className="w-full sm:w-auto">
+                <Button
+                  size="lg"
+                  variant="outline"
+                  className="bg-transparent border-2 border-border text-foreground hover:bg-secondary font-bold px-10 py-7 text-xl rounded-lg w-full"
+                >
+                  Join Waitlist
+                </Button>
+              </Link>
             </div>
 
             <div className="flex items-center gap-4 text-sm text-muted-foreground mb-12">
@@ -64,7 +65,7 @@ export function Hero() {
         </div>
       </section>
 
-      <WaitlistModal isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} />
+      {/* <WaitlistModal isOpen={isWaitlistOpen} onClose={() => setIsWaitlistOpen(false)} /> */}
     </>
   )
 }
