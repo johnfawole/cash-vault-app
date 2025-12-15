@@ -8,24 +8,21 @@ import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /**
  * @title DCAInvestment
- * @notice Dollar-cost averaging planner. Users pre-fund plans and anyone can execute a due cycle.
+ * @notice Flexible savings vault used as the funding leg for a DCA strategy.
+ * @dev
+ * - Users create "plans" that are simply token buckets they can top up any time.
+ * - The actual DCA behaviour (e.g. recurring buys) is handled off-chain using these balances.
+ * - On-chain we only enforce deposits, withdrawals (with protocol fee), and plan closure (no fee).
  */
 contract DCAInvestment is ReentrancyGuard, Ownable {
     using SafeERC20 for IERC20;
 
     struct Plan {
         address owner;
-        address beneficiary;
         IERC20 token;
-        uint128 amountPerInterval;
-        uint64 interval;
-        uint64 nextExecution;
-        uint256 remainingBalance;
+        uint256 balance;
         bool active;
     }
-
-    uint64 public constant MIN_INTERVAL = 1 days;
-    uint64 public constant MAX_INTERVAL = 90 days;
     uint256 public constant WITHDRAWAL_FEE_BPS = 200; // 2% = 200 basis points
 
     /// @notice USDC token address (set at deployment or via setUSDC)
@@ -37,20 +34,18 @@ contract DCAInvestment is ReentrancyGuard, Ownable {
     uint256 private _planIdTracker;
     mapping(uint256 => Plan) public plans;
 
-    event PlanCreated(uint256 indexed planId, address indexed owner, address indexed beneficiary, address token);
+    event PlanCreated(uint256 indexed planId, address indexed owner, address token);
     event PlanFunded(uint256 indexed planId, uint256 amount, uint256 newBalance);
-    event PlanExecuted(uint256 indexed planId, address indexed executor, uint256 amount, uint64 nextExecution);
-    event PlanUpdated(uint256 indexed planId, address beneficiary, uint128 amountPerInterval, uint64 interval);
-    event PlanCancelled(uint256 indexed planId, uint256 refund);
+    event PlanWithdrawn(uint256 indexed planId, address indexed owner, uint256 amount, uint256 fee);
+    event PlanClosed(uint256 indexed planId, uint256 refund);
     event ProtocolFeeRecipientUpdated(address indexed newRecipient);
     event ProtocolFeeCollected(address indexed token, uint256 amount);
 
-    modifier onlyOwner(uint256 planId) {
+    modifier onlyPlanOwner(uint256 planId) {
         if (plans[planId].owner != msg.sender) revert Unauthorized();
         _;
     }
 
-    error InvalidInterval();
     error InvalidAmount();
     error PlanInactive();
     error Unauthorized();
@@ -76,123 +71,108 @@ contract DCAInvestment is ReentrancyGuard, Ownable {
     }
 
     /**
-     * @notice Create a new DCA plan.
-     * @param token ERC20 asset used for purchases.
-     * @param beneficiary Destination wallet or on-ramp that receives executions.
-     * @param amountPerInterval Amount sent each interval.
-     * @param interval Interval length in seconds.
-     * @param prefund Optional amount transferred immediately to seed the plan.
-     * @param startTime Optional first execution timestamp (0 means now + interval).
+     * @notice Create a new savings plan for a specific ERC20 token.
+     * @param token ERC20 asset users will deposit into this plan.
+     * @param prefund Optional amount to deposit immediately.
      */
     function createPlan(
         IERC20 token,
-        address beneficiary,
-        uint128 amountPerInterval,
-        uint64 interval,
-        uint256 prefund,
-        uint64 startTime
+        uint256 prefund
     ) external nonReentrant returns (uint256 planId) {
-        if (amountPerInterval == 0) revert InvalidAmount();
-        if (interval < MIN_INTERVAL || interval > MAX_INTERVAL) revert InvalidInterval();
-        if (beneficiary == address(0)) revert Unauthorized();
-
         planId = ++_planIdTracker;
-        uint64 firstExecution = startTime == 0 ? uint64(block.timestamp) + interval : startTime;
 
         plans[planId] = Plan({
             owner: msg.sender,
-            beneficiary: beneficiary,
             token: token,
-            amountPerInterval: amountPerInterval,
-            interval: interval,
-            nextExecution: firstExecution,
-            remainingBalance: 0,
+            balance: 0,
             active: true
         });
 
         if (prefund > 0) {
             token.safeTransferFrom(msg.sender, address(this), prefund);
-            plans[planId].remainingBalance = prefund;
+            plans[planId].balance = prefund;
         }
 
-        emit PlanCreated(planId, msg.sender, beneficiary, address(token));
+        emit PlanCreated(planId, msg.sender, address(token));
         if (prefund > 0) emit PlanFunded(planId, prefund, prefund);
     }
 
-    function fundPlan(uint256 planId, uint256 amount) external nonReentrant onlyOwner(planId) {
+    /// @notice Deposit more tokens into an existing plan.
+    function fundPlan(uint256 planId, uint256 amount) external nonReentrant onlyPlanOwner(planId) {
         if (!plans[planId].active) revert PlanInactive();
         plans[planId].token.safeTransferFrom(msg.sender, address(this), amount);
-        plans[planId].remainingBalance += amount;
-        emit PlanFunded(planId, amount, plans[planId].remainingBalance);
+        plans[planId].balance += amount;
+        emit PlanFunded(planId, amount, plans[planId].balance);
     }
 
-    function updatePlan(
+    /**
+     * @notice Withdraw from a plan to the caller, applying the protocol withdrawal fee.
+     * @param planId The plan to withdraw from.
+     * @param amount Amount of tokens to withdraw from the plan.
+     */
+    function withdraw(
         uint256 planId,
-        address newBeneficiary,
-        uint128 newAmountPerInterval,
-        uint64 newInterval
-    ) external onlyOwner(planId) {
+        uint256 amount
+    ) external nonReentrant onlyPlanOwner(planId) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanInactive();
+        if (amount == 0) revert InvalidAmount();
+        if (plan.balance < amount) revert InsufficientBalance();
 
-        if (newBeneficiary != address(0)) plan.beneficiary = newBeneficiary;
-        if (newAmountPerInterval != 0) plan.amountPerInterval = newAmountPerInterval;
+        plan.balance -= amount;
 
-        if (newInterval != 0) {
-            if (newInterval < MIN_INTERVAL || newInterval > MAX_INTERVAL) revert InvalidInterval();
-            plan.interval = newInterval;
+        uint256 fee = (amount * WITHDRAWAL_FEE_BPS) / 10000;
+        uint256 userAmount = amount - fee;
+
+        if (fee > 0 && protocolFeeRecipient != address(0)) {
+            plan.token.safeTransfer(protocolFeeRecipient, fee);
+            emit ProtocolFeeCollected(address(plan.token), fee);
         }
 
-        emit PlanUpdated(planId, plan.beneficiary, plan.amountPerInterval, plan.interval);
+        // Always send withdrawals to the plan owner (msg.sender is enforced by onlyPlanOwner)
+        plan.token.safeTransfer(plan.owner, userAmount);
+
+        emit PlanWithdrawn(planId, plan.owner, userAmount, fee);
     }
 
     /**
-     * @notice Execute a due plan. Callable by anyone (keepers can earn off-chain rewards).
+     * @notice Close a plan and withdraw the full remaining balance to the owner, applying the protocol withdrawal fee.
+     * @param planId The plan to close.
+     * @param to Optional recipient address (defaults to plan owner if zero address).
      */
-    function executePlan(uint256 planId) external nonReentrant {
-        Plan storage plan = plans[planId];
-        if (!plan.active) revert PlanInactive();
-        if (block.timestamp < plan.nextExecution) revert NotDueYet();
-        if (plan.remainingBalance < plan.amountPerInterval) revert InsufficientBalance();
-
-        uint256 amount = plan.amountPerInterval;
-        plan.remainingBalance -= amount;
-        plan.nextExecution += plan.interval; // Update BEFORE transfer to prevent multiple executions in same block
-        plan.token.safeTransfer(plan.beneficiary, amount);
-
-        emit PlanExecuted(planId, msg.sender, amount, plan.nextExecution);
-    }
-
-    function cancelPlan(uint256 planId) external nonReentrant onlyOwner(planId) {
+    function closePlan(uint256 planId, address to) external nonReentrant onlyPlanOwner(planId) {
         Plan storage plan = plans[planId];
         if (!plan.active) revert PlanInactive();
 
-        uint256 refund = plan.remainingBalance;
-        if (refund == 0) revert NothingToRefund();
+        uint256 amount = plan.balance;
+        if (amount == 0) revert NothingToRefund();
 
         plan.active = false;
-        plan.remainingBalance = 0;
-        plan.token.safeTransfer(plan.owner, refund);
-        emit PlanCancelled(planId, refund);
+        plan.balance = 0;
+
+        // Apply the same withdrawal fee as regular withdrawals
+        uint256 fee = (amount * WITHDRAWAL_FEE_BPS) / 10000;
+        uint256 userAmount = amount - fee;
+
+        if (fee > 0 && protocolFeeRecipient != address(0)) {
+            plan.token.safeTransfer(protocolFeeRecipient, fee);
+            emit ProtocolFeeCollected(address(plan.token), fee);
+        }
+
+        address recipient = to == address(0) ? plan.owner : to;
+        plan.token.safeTransfer(recipient, userAmount);
+        emit PlanClosed(planId, userAmount);
     }
 
     /**
-     * @notice Create a DCA plan using USDC. Requires USDC address to be set.
-     * @param beneficiary Destination wallet or on-ramp that receives executions.
-     * @param amountPerInterval Amount in USDC (6 decimals) sent each interval.
-     * @param interval Interval length in seconds.
-     * @param prefund Optional amount transferred immediately to seed the plan.
-     * @param startTime Optional first execution timestamp (0 means now + interval).
+     * @notice Create a savings plan using USDC. Requires USDC address to be set.
+     * @param prefund Optional amount in USDC (6 decimals) to deposit immediately.
      */
     function createPlanWithUSDC(
-        address beneficiary,
-        uint128 amountPerInterval,
-        uint64 interval,
-        uint256 prefund,
-        uint64 startTime
+        uint256 prefund
     ) external nonReentrant returns (uint256 planId) {
         if (address(usdc) == address(0)) revert USDCNotSet();
-        return createPlan(usdc, beneficiary, amountPerInterval, interval, prefund, startTime);
+        return createPlan(usdc, prefund);
     }
 
     function getPlan(uint256 planId) external view returns (Plan memory) {
