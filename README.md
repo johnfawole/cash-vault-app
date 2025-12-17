@@ -4,7 +4,7 @@ CashVault is a **multi-chain savings protocol** designed to help users lock fund
 
 CashVault starts with **manual savings** and is built to support **automation over time**.
 
----
+
 
 ## What this repo is about
 
