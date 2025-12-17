@@ -1,4 +1,4 @@
-import { Lock, Twitter, Linkedin, Instagram } from "lucide-react"
+import { Lock, Twitter, Linkedin, Instagram } from 'lucide-react'
 import Link from "next/link"
 
 export function Footer() {
@@ -8,13 +8,11 @@ export function Footer() {
         <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div>
             <div className="flex items-center gap-2 mb-4">
-              <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary">
-                <Lock className="w-4 h-4 text-primary-foreground" />
-              </div>
+              <Lock className="w-6 h-6 text-primary" />
               <span className="text-lg font-semibold text-foreground">CashVault</span>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Building the foundation for your financial success through disciplined saving and smart investing.
+              Plan, save, and secure your financial future.
             </p>
           </div>
 
@@ -90,14 +88,14 @@ export function Footer() {
 
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-4">
           <p className="text-sm text-muted-foreground">© 2025 CashVault. All rights reserved.</p>
-          <div className="flex items-center gap-6">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+          <div className="flex items-center gap-4">
+            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Twitter">
               <Twitter className="w-5 h-5" />
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="LinkedIn">
               <Linkedin className="w-5 h-5" />
             </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
+            <a href="#" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
               <Instagram className="w-5 h-5" />
             </a>
           </div>
