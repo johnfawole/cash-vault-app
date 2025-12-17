@@ -1,30 +1,39 @@
-# CashVault app design
+# CashVault
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+CashVault is a **multi-chain savings protocol** designed to help users lock funds, save toward clear goals, and build disciplined financial habits across crypto and Bitcoin.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/o2UUoCkVV5b)
+CashVault starts with **manual savings** and is built to support **automation over time**.
 
-## Overview
+---
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+## What this repo is about
 
-## Deployment
+### What CashVault does
 
-Your project is live at:
+* **Safe Lock** – Lock funds for a fixed period (up to 6 months) to reduce impulsive spending.
+* **Target Savings** – Save toward a specific goal and unlock funds only when conditions are met.
+* **DCA-ready architecture** – Designed to support recurring savings and dollar-cost averaging in future releases.
+* **Bitcoin-native vaults** – Secure native BTC using Taproot/Tapscript spending conditions.
 
-**[https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design](https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design)**
+### Supported stacks
 
-## Build your app
+CashVault uses the right language for each chain:
 
-Continue building your app on:
+* **Solidity (EVM)** – Stablecoins and EVM-based assets
+* **Clarity (Stacks)** – Bitcoin-adjacent savings via sBTC
+* **Tapscript (Bitcoin)** – Native BTC vaults with timelocks and spending policies
 
-**[https://v0.app/chat/o2UUoCkVV5b](https://v0.app/chat/o2UUoCkVV5b)**
+### User flow
 
-## How It Works
+1. Connect wallet (EVM, Stacks, or Bitcoin)
+2. Choose a savings vault or goal
+3. Deposit funds manually
+4. Withdraw when conditions are satisfied
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+### Fees
+
+* Simple, transparent protocol fees
+* Charged in the **same asset being saved** (BTC, sBTC, USDC, etc.)
+* Designed to be predictable and trust-first
+
+CashVault is built for users who want **fewer impulses and stronger financial habits**, not more charts and leverage.
