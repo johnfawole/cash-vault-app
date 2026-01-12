@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
-import { Lock } from "lucide-react"
+import { Lock } from 'lucide-react'
 import Link from "next/link"
+import Image from "next/image"
 
 export function Header() {
   return (
@@ -8,8 +9,8 @@ export function Header() {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
-            <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary">
-              <Lock className="w-4 h-4 text-primary-foreground" />
+            <div className="bg-[#c4fa6b] p-2 rounded-lg">
+              <Lock className="w-6 h-6 text-[#0a1628]" />
             </div>
             <span className="text-lg font-semibold text-foreground">CashVault</span>
           </Link>
