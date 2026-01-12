@@ -12,15 +12,25 @@ import { TrendingUp, ArrowLeft, DollarSign, Coins } from "lucide-react"
 import Link from "next/link"
 
 export function DCA() {
+  const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit")
   const [formData, setFormData] = useState({
     assetType: "",
     investmentAmount: "",
     frequency: "",
   })
+  const [withdrawData, setWithdrawData] = useState({
+    assetType: "",
+    withdrawAmount: "",
+  })
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     console.log("DCA Investment Plan:", formData)
+  }
+
+  const handleWithdraw = (e: React.FormEvent) => {
+    e.preventDefault()
+    console.log("Withdraw DCA:", withdrawData)
   }
 
   return (
@@ -42,84 +52,165 @@ export function DCA() {
             Dollar Cost Averaging
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl leading-relaxed">
-            Build wealth through consistent investing. Buy Bitcoin, Ether, or Stacks automatically at regular intervals.
+            Build wealth through consistent investing. Buy USDC or Ether automatically at regular intervals.
           </p>
         </div>
 
-        <Card className="border border-border bg-card">
-          <CardContent className="p-8 md:p-12">
-            <form onSubmit={handleSubmit} className="space-y-8">
-              <div className="space-y-2">
-                <Label htmlFor="assetType" className="text-base font-semibold text-foreground">
-                  Asset Type
-                </Label>
-                <div className="relative">
-                  <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+        <div className="mb-8">
+          <div className="flex gap-4 border-b border-border">
+            <button
+              onClick={() => setActiveTab("deposit")}
+              className={`px-6 py-4 text-lg font-semibold transition-colors relative ${
+                activeTab === "deposit" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Start DCA
+              {activeTab === "deposit" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+            </button>
+            <button
+              onClick={() => setActiveTab("withdraw")}
+              className={`px-6 py-4 text-lg font-semibold transition-colors relative ${
+                activeTab === "withdraw" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Withdraw
+              {activeTab === "withdraw" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+            </button>
+          </div>
+        </div>
+
+        {activeTab === "deposit" ? (
+          <Card className="border border-border bg-card">
+            <CardContent className="p-8 md:p-12">
+              <form onSubmit={handleSubmit} className="space-y-8">
+                <div className="space-y-2">
+                  <Label htmlFor="assetType" className="text-base font-semibold text-foreground">
+                    Asset Type
+                  </Label>
+                  <div className="relative">
+                    <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                    <Select
+                      value={formData.assetType}
+                      onValueChange={(value) => setFormData({ ...formData, assetType: value })}
+                    >
+                      <SelectTrigger className="h-14 text-base pl-12 bg-background border-border focus:border-primary">
+                        <SelectValue placeholder="Select asset to invest in" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="usdc">USDC</SelectItem>
+                        <SelectItem value="ether">Ether (ETH)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Choose the asset you want to invest in</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="investmentAmount" className="text-base font-semibold text-foreground">
+                    Investment Amount Per Interval
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="investmentAmount"
+                      type="number"
+                      placeholder="100"
+                      value={formData.investmentAmount}
+                      onChange={(e) => setFormData({ ...formData, investmentAmount: e.target.value })}
+                      className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
+                      required
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">How much do you want to invest each time?</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="frequency" className="text-base font-semibold text-foreground">
+                    Frequency
+                  </Label>
                   <Select
-                    value={formData.assetType}
-                    onValueChange={(value) => setFormData({ ...formData, assetType: value })}
+                    value={formData.frequency}
+                    onValueChange={(value) => setFormData({ ...formData, frequency: value })}
                   >
-                    <SelectTrigger className="h-14 text-base pl-12 bg-background border-border focus:border-primary">
-                      <SelectValue placeholder="Select asset to invest in" />
+                    <SelectTrigger className="h-14 text-base bg-background border-border focus:border-primary">
+                      <SelectValue placeholder="Select investment frequency" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="bitcoin">Bitcoin (BTC)</SelectItem>
-                      <SelectItem value="ethereum">Ethereum (ETH)</SelectItem>
-                      <SelectItem value="stacks">Stacks (STX)</SelectItem>
+                      <SelectItem value="weekly">Weekly</SelectItem>
+                      <SelectItem value="monthly">Monthly</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-sm text-muted-foreground">How often do you want to invest?</p>
                 </div>
-                <p className="text-sm text-muted-foreground">Choose the cryptocurrency you want to invest in</p>
-              </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="investmentAmount" className="text-base font-semibold text-foreground">
-                  Investment Amount Per Interval
-                </Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                  <Input
-                    id="investmentAmount"
-                    type="number"
-                    placeholder="100"
-                    value={formData.investmentAmount}
-                    onChange={(e) => setFormData({ ...formData, investmentAmount: e.target.value })}
-                    className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
-                    required
-                  />
-                </div>
-                <p className="text-sm text-muted-foreground">How much do you want to invest each time?</p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="frequency" className="text-base font-semibold text-foreground">
-                  Frequency
-                </Label>
-                <Select
-                  value={formData.frequency}
-                  onValueChange={(value) => setFormData({ ...formData, frequency: value })}
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
                 >
-                  <SelectTrigger className="h-14 text-base bg-background border-border focus:border-primary">
-                    <SelectValue placeholder="Select investment frequency" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                  </SelectContent>
-                </Select>
-                <p className="text-sm text-muted-foreground">How often do you want to invest?</p>
-              </div>
+                  Start DCA Investment
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="border border-border bg-card">
+            <CardContent className="p-8 md:p-12">
+              <form onSubmit={handleWithdraw} className="space-y-8">
+                <div className="space-y-2">
+                  <Label htmlFor="withdraw-asset" className="text-base font-semibold text-foreground">
+                    Asset Type
+                  </Label>
+                  <div className="relative">
+                    <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
+                    <Select
+                      value={withdrawData.assetType}
+                      onValueChange={(value) => setWithdrawData({ ...withdrawData, assetType: value })}
+                    >
+                      <SelectTrigger className="h-14 text-base pl-12 bg-background border-border focus:border-primary">
+                        <SelectValue placeholder="Select asset to withdraw" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="usdc">USDC</SelectItem>
+                        <SelectItem value="ether">Ether (ETH)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <p className="text-sm text-muted-foreground">Which asset do you want to withdraw?</p>
+                </div>
 
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
-              >
-                Start DCA Investment
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
+                <div className="space-y-2">
+                  <Label htmlFor="withdraw-amount" className="text-base font-semibold text-foreground">
+                    Withdrawal Amount
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="withdraw-amount"
+                      type="number"
+                      placeholder="500"
+                      value={withdrawData.withdrawAmount}
+                      onChange={(e) => setWithdrawData({ ...withdrawData, withdrawAmount: e.target.value })}
+                      className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
+                      required
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    How much do you want to withdraw from your DCA holdings?
+                  </p>
+                </div>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
+                >
+                  Withdraw Funds
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        )}
       </div>
     </div>
   )

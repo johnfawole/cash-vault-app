@@ -15,17 +15,10 @@ export function CTASection() {
             Join thousands building lasting wealth through disciplined saving. Start your journey today.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Button
-              size="lg"
-              className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-10 py-7 text-xl rounded-lg shadow-lg hover:shadow-xl transition-all w-full sm:w-auto"
-            >
-              Test Beta
-            </Button>
             <Link href="/waitlist" className="w-full sm:w-auto">
               <Button
                 size="lg"
-                variant="outline"
-                className="bg-transparent border-2 border-border text-foreground hover:bg-secondary font-bold px-10 py-7 text-xl rounded-lg w-full"
+                className="bg-primary text-primary-foreground hover:bg-primary/90 font-bold px-10 py-7 text-xl rounded-lg shadow-lg hover:shadow-xl transition-all w-full"
               >
                 Join Waitlist
               </Button>
