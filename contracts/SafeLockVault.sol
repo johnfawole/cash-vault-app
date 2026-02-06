@@ -18,7 +18,8 @@ contract SafeLockVault is ReentrancyGuard, Ownable {
         IERC20 token;
         uint256 amount;
         uint64 unlockTime;
-        uint64 duration;
+        uint64 duration; // Original lock duration (used for auto-relock)
+        uint64 originalDuration; // Store original duration separately to prevent extension issues
         bool autoRelock;
         bool active;
     }
@@ -91,6 +92,7 @@ contract SafeLockVault is ReentrancyGuard, Ownable {
             amount: amount,
             unlockTime: uint64(block.timestamp) + duration,
             duration: duration,
+            originalDuration: duration, // Store original duration
             autoRelock: autoRelock,
             active: true
         });
@@ -113,15 +115,15 @@ contract SafeLockVault is ReentrancyGuard, Ownable {
     function extendLock(uint256 lockId, uint64 additionalDuration) external nonReentrant onlyOwner(lockId) {
         LockPosition storage position = locks[lockId];
         if (!position.active) revert LockInactive();
-        uint64 newDuration = position.duration + additionalDuration;
-        if (newDuration > MAX_DURATION) revert InvalidDuration();
         
         // Extend from current unlockTime, not from block.timestamp
         uint64 newUnlockTime = position.unlockTime + additionalDuration;
         uint64 maxUnlockTime = uint64(block.timestamp) + MAX_DURATION;
         if (newUnlockTime > maxUnlockTime) revert InvalidDuration();
 
-        position.duration = newDuration;
+        // Update unlockTime but keep originalDuration unchanged for auto-relock
+        // Only update duration for tracking current lock period
+        position.duration = position.originalDuration + additionalDuration;
         position.unlockTime = newUnlockTime;
         emit LockExtended(lockId, position.unlockTime);
     }
@@ -145,8 +147,12 @@ contract SafeLockVault is ReentrancyGuard, Ownable {
         uint256 userAmount = amount - fee;
 
         if (position.autoRelock) {
-            // Transfer funds even when auto-relocking
-            position.unlockTime = uint64(block.timestamp) + position.duration;
+            // CRITICAL FIX: Reset amount to 0 BEFORE transfers to prevent infinite drain
+            // Follow Checks-Effects-Interactions pattern
+            position.amount = 0;
+            
+            // Use originalDuration for auto-relock, not the extended duration
+            position.unlockTime = uint64(block.timestamp) + position.originalDuration;
             
             if (fee > 0 && protocolFeeRecipient != address(0)) {
                 position.token.safeTransfer(protocolFeeRecipient, fee);

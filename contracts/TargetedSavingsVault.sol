@@ -161,19 +161,46 @@ contract TargetedSavingsVault is ReentrancyGuard, Ownable {
         emit GoalReleased(goalId, destination, userAmount, fee);
     }
 
-    function cancel(uint256 goalId, address destination) external nonReentrant {
+    /**
+     * @notice Cancel a goal. Only the goal owner can cancel.
+     * @dev CRITICAL FIX: When cancelled, funds remain in the contract and contributors must claim their refunds.
+     * This prevents the goal owner from stealing contributor funds by redirecting them.
+     * @param goalId The goal to cancel.
+     */
+    function cancel(uint256 goalId) external nonReentrant {
         Goal storage goal = goals[goalId];
         if (goal.owner != msg.sender) revert NotOwner();
         if (goal.released || goal.cancelled) revert GoalNotActive();
 
+        // Mark as cancelled but keep balance in contract
+        // Contributors must claim their refunds individually
         goal.cancelled = true;
-        uint256 amount = goal.balance;
-        goal.balance = 0;
+        
+        emit GoalCancelled(goalId, goal.balance);
+    }
 
-        if (destination == address(0)) destination = goal.owner;
-        goal.token.safeTransfer(destination, amount);
-
-        emit GoalCancelled(goalId, amount);
+    /**
+     * @notice Allow contributors (including goal owner) to claim their refund after a goal is cancelled.
+     * @dev Each contributor can claim back exactly what they contributed.
+     * @param goalId The cancelled goal ID.
+     */
+    function claimRefund(uint256 goalId) external nonReentrant {
+        Goal storage goal = goals[goalId];
+        if (!goal.cancelled) revert GoalNotActive();
+        
+        uint256 contribution = contributorTotals[goalId][msg.sender];
+        if (contribution == 0) revert ZeroAmount();
+        if (contribution > goal.balance) {
+            // Safety check: can't refund more than available
+            contribution = goal.balance;
+        }
+        
+        // Mark as refunded and update balance
+        contributorTotals[goalId][msg.sender] = 0;
+        goal.balance -= contribution;
+        
+        goal.token.safeTransfer(msg.sender, contribution);
+        emit GoalCancelled(goalId, contribution);
     }
 
     /**
