@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Lock, ArrowLeft, Coins } from "lucide-react"
+import { Lock, ArrowLeft, Coins, Wallet } from "lucide-react"
 import Link from "next/link"
 
 export function SafeLock() {
@@ -22,8 +22,31 @@ export function SafeLock() {
   const [lockId, setLockId] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isWalletConnected, setIsWalletConnected] = useState(false)
 
   const { createLock, withdrawLock } = useContract()
+
+  const handleConnectWallet = async () => {
+    try {
+      setError(null)
+      // This will be replaced with actual wallet connection logic
+      if (typeof window !== "undefined" && window.ethereum) {
+        const accounts = await window.ethereum.request({
+          method: "eth_requestAccounts"
+        })
+        if (accounts.length > 0) {
+          setIsWalletConnected(true)
+          console.log("[v0] Wallet connected:", accounts[0])
+        }
+      } else {
+        setError("MetaMask or compatible wallet not found. Please install it.")
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
+      setError(errorMessage)
+      console.error("[v0] Error connecting wallet:", err)
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,7 +113,7 @@ export function SafeLock() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <header className="border-b border-border/50">
-        <div className="container mx-auto px-6 py-6">
+        <div className="container mx-auto px-6 py-6 flex items-center justify-between">
           <Link
             href="/"
             className="inline-flex items-center gap-2 text-foreground hover:text-primary transition-colors"
@@ -98,6 +121,17 @@ export function SafeLock() {
             <ArrowLeft className="w-5 h-5" />
             <span className="text-lg font-semibold">Back to Home</span>
           </Link>
+          <Button
+            onClick={handleConnectWallet}
+            className={`flex items-center gap-2 ${
+              isWalletConnected
+                ? "bg-primary/20 text-primary hover:bg-primary/30"
+                : "bg-primary text-primary-foreground hover:bg-primary/90"
+            }`}
+          >
+            <Wallet className="w-5 h-5" />
+            {isWalletConnected ? "Wallet Connected" : "Connect Wallet"}
+          </Button>
         </div>
       </header>
 
@@ -197,10 +231,28 @@ export function SafeLock() {
                       <SelectItem value="6" className="text-lg">
                         6 months
                       </SelectItem>
+                      <SelectItem value="7" className="text-lg">
+                        7 months
+                      </SelectItem>
+                      <SelectItem value="8" className="text-lg">
+                        8 months
+                      </SelectItem>
+                      <SelectItem value="9" className="text-lg">
+                        9 months
+                      </SelectItem>
+                      <SelectItem value="10" className="text-lg">
+                        10 months
+                      </SelectItem>
+                      <SelectItem value="11" className="text-lg">
+                        11 months
+                      </SelectItem>
+                      <SelectItem value="12" className="text-lg">
+                        12 months
+                      </SelectItem>
                     </SelectContent>
                   </Select>
                   <p className="text-sm text-muted-foreground">
-                    Choose how long you want to lock your money. Maximum 6 months.
+                    Choose how long you want to lock your money. Maximum 12 months.
                   </p>
                 </div>
 
