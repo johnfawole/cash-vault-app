@@ -9,8 +9,9 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Lock, ArrowLeft, Coins, Wallet } from "lucide-react"
+import { Lock, ArrowLeft, Coins, Wallet, Plus } from "lucide-react"
 import Link from "next/link"
+import { AssetSelector } from "@/components/asset-selector"
 
 export function SafeLock() {
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit")
@@ -24,7 +25,8 @@ export function SafeLock() {
   const [error, setError] = useState<string | null>(null)
   const [isWalletConnected, setIsWalletConnected] = useState(false)
 
-  const { createLock, withdrawLock } = useContract()
+  const { createLock, withdrawLock, extendLock, addFunds } = useContract()
+  const [actionMode, setActionMode] = useState<"create" | "extend" | "addFunds">("create")
 
   const handleConnectWallet = async () => {
     try {
@@ -257,26 +259,11 @@ export function SafeLock() {
                 </div>
 
                 {/* Select Asset */}
-                <div className="space-y-3">
-                  <Label htmlFor="asset" className="text-lg font-semibold text-foreground">
-                    Select Asset
-                  </Label>
-                  <Select value={asset} onValueChange={setAsset} required>
-                    <SelectTrigger id="asset" className="h-16 text-lg bg-background border-border focus:border-primary">
-                      <Coins className="mr-3 h-5 w-5 text-muted-foreground" />
-                      <SelectValue placeholder="Choose asset to lock" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usdc" className="text-lg">
-                        USDC
-                      </SelectItem>
-                      <SelectItem value="ether" className="text-lg">
-                        Ether (ETH)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">Choose which asset you want to lock up.</p>
-                </div>
+                <AssetSelector 
+                  value={asset} 
+                  onChange={setAsset}
+                  label="Select Asset"
+                />
 
                 {/* Re-lock Option */}
                 <div className="space-y-3">
@@ -336,29 +323,11 @@ export function SafeLock() {
                 </div>
 
                 {/* Select Asset */}
-                <div className="space-y-3">
-                  <Label htmlFor="withdraw-asset" className="text-lg font-semibold text-foreground">
-                    Select Asset
-                  </Label>
-                  <Select value={asset} onValueChange={setAsset} required>
-                    <SelectTrigger
-                      id="withdraw-asset"
-                      className="h-16 text-lg bg-background border-border focus:border-primary"
-                    >
-                      <Coins className="mr-3 h-5 w-5 text-muted-foreground" />
-                      <SelectValue placeholder="Choose asset to withdraw" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="usdc" className="text-lg">
-                        USDC
-                      </SelectItem>
-                      <SelectItem value="ether" className="text-lg">
-                        Ether (ETH)
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">Select the locked asset you want to withdraw.</p>
-                </div>
+                <AssetSelector 
+                  value={asset} 
+                  onChange={setAsset}
+                  label="Select Asset"
+                />
 
                 {/* Amount to Withdraw */}
                 <div className="space-y-3">
