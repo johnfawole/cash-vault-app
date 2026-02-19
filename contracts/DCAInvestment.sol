@@ -182,4 +182,3 @@ contract DCAInvestment is ReentrancyGuard, Ownable {
         return plans[planId];
     }
 }
-

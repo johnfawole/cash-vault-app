@@ -220,6 +220,3 @@ contract SafeLockVault is ReentrancyGuard, Ownable {
         return createLock(usdc, amount, duration, autoRelock);
     }
 }
-
-
-

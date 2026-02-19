@@ -209,8 +209,3 @@ contract SafeLockVaultTest is Test {
         assertTrue(vault.locks(lockId).autoRelock);
     }
 }
-
-
-
-
-

@@ -3,6 +3,7 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useContract } from "@/hooks/useContract"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -18,16 +19,71 @@ export function SafeLock() {
   const [asset, setAsset] = useState("")
   const [relock, setRelock] = useState(false)
   const [withdrawAmount, setWithdrawAmount] = useState("")
+  const [lockId, setLockId] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { createLock, withdrawLock } = useContract()
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log({ amount, duration, asset, relock })
-    // Handle form submission here
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      if (!amount || !duration || !asset) {
+        throw new Error("Please fill in all fields")
+      }
+
+      const tx = await createLock({
+        amount,
+        duration: parseInt(duration),
+        autoRelock: relock,
+        asset
+      })
+
+      console.log("[v0] Lock created:", tx)
+      setAmount("")
+      setDuration("")
+      setAsset("")
+      setRelock(false)
+      alert("Lock created successfully!")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create lock"
+      setError(errorMessage)
+      console.error("[v0] Error creating lock:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleWithdraw = (e: React.FormEvent) => {
+  const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log({ withdrawAmount, asset })
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      if (!lockId || !withdrawAmount || !asset) {
+        throw new Error("Please fill in all fields")
+      }
+
+      const tx = await withdrawLock({
+        lockId: parseInt(lockId),
+        amount: withdrawAmount,
+        asset
+      })
+
+      console.log("[v0] Withdrawal processed:", tx)
+      setWithdrawAmount("")
+      setLockId("")
+      alert("Withdrawal successful!")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to withdraw"
+      setError(errorMessage)
+      console.error("[v0] Error withdrawing:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -183,14 +239,21 @@ export function SafeLock() {
                   </div>
                 </div>
 
+                {error && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 {/* Submit Button */}
                 <div className="pt-6">
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={isLoading}
+                    className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
                   >
-                    Lock My Money
+                    {isLoading ? "Processing..." : "Lock My Money"}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground mt-4">
                     By locking your money, you agree to our terms and conditions
@@ -201,6 +264,25 @@ export function SafeLock() {
           ) : (
             <div className="bg-card border border-border rounded-2xl p-8 md:p-12">
               <form onSubmit={handleWithdraw} className="space-y-8">
+                {/* Lock ID */}
+                <div className="space-y-3">
+                  <Label htmlFor="lock-id" className="text-lg font-semibold text-foreground">
+                    Lock ID
+                  </Label>
+                  <Input
+                    id="lock-id"
+                    type="number"
+                    placeholder="Enter your lock ID"
+                    value={lockId}
+                    onChange={(e) => setLockId(e.target.value)}
+                    className="h-16 text-lg bg-background border-border focus:border-primary"
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    The unique ID of your locked position from the transaction receipt.
+                  </p>
+                </div>
+
                 {/* Select Asset */}
                 <div className="space-y-3">
                   <Label htmlFor="withdraw-asset" className="text-lg font-semibold text-foreground">
@@ -250,14 +332,21 @@ export function SafeLock() {
                   </p>
                 </div>
 
+                {error && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 {/* Submit Button */}
                 <div className="pt-6">
                   <Button
                     type="submit"
                     size="lg"
-                    className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground"
+                    disabled={isLoading}
+                    className="w-full h-16 text-xl font-bold bg-primary hover:bg-primary/90 text-primary-foreground disabled:opacity-50"
                   >
-                    Withdraw Funds
+                    {isLoading ? "Processing..." : "Withdraw Funds"}
                   </Button>
                   <p className="text-center text-sm text-muted-foreground mt-4">
                     Withdrawals are only available after your lock period expires
