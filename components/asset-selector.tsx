@@ -1,7 +1,7 @@
 "use client"
 
 import { Card } from "@/components/ui/card"
-import { DollarSign, Zap } from "lucide-react"
+import Image from "next/image"
 
 interface AssetSelectorProps {
   value: string
@@ -14,15 +14,13 @@ const ASSETS = [
     id: "usdc",
     name: "USDC",
     description: "USD Coin",
-    icon: DollarSign,
-    color: "bg-blue-100 text-blue-600"
+    logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/download%20%283%29-MjmgBaPAINPPQ2TyYnDRd9eSTWitXd.png"
   },
   {
     id: "ether",
     name: "Ether",
     description: "ETH",
-    icon: Zap,
-    color: "bg-purple-100 text-purple-600"
+    logo: "https://hebbkx1anhila5yf.public.blob.vercel-storage.com/download%20%284%29-7naQqqpOICY6NxDb5wHnbOe7umEwph.jpg"
   }
 ]
 
@@ -32,7 +30,6 @@ export function AssetSelector({ value, onChange, label }: AssetSelectorProps) {
       {label && <label className="text-lg font-semibold text-foreground block">{label}</label>}
       <div className="grid grid-cols-2 gap-4">
         {ASSETS.map((asset) => {
-          const Icon = asset.icon
           const isSelected = value === asset.id
           
           return (
@@ -46,8 +43,13 @@ export function AssetSelector({ value, onChange, label }: AssetSelectorProps) {
               }`}
             >
               <div className="flex flex-col items-center gap-3">
-                <div className={`p-3 rounded-lg ${asset.color}`}>
-                  <Icon className="w-6 h-6" />
+                <div className="relative w-12 h-12">
+                  <Image
+                    src={asset.logo}
+                    alt={asset.name}
+                    fill
+                    className="object-contain"
+                  />
                 </div>
                 <div className="text-center">
                   <p className="font-semibold text-foreground">{asset.name}</p>

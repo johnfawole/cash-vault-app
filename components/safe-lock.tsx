@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Lock, ArrowLeft, Coins, Wallet, Plus } from "lucide-react"
 import Link from "next/link"
 import { AssetSelector } from "@/components/asset-selector"
+import { DurationCalendarPicker } from "@/components/duration-calendar-picker"
 
 export function SafeLock() {
   const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit")
@@ -202,61 +203,12 @@ export function SafeLock() {
                   </p>
                 </div>
 
-                {/* Duration */}
-                <div className="space-y-3">
-                  <Label htmlFor="duration" className="text-lg font-semibold text-foreground">
-                    Lock Duration
-                  </Label>
-                  <Select value={duration} onValueChange={setDuration} required>
-                    <SelectTrigger
-                      id="duration"
-                      className="h-16 text-lg bg-background border-border focus:border-primary"
-                    >
-                      <SelectValue placeholder="Select duration" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1" className="text-lg">
-                        1 month
-                      </SelectItem>
-                      <SelectItem value="2" className="text-lg">
-                        2 months
-                      </SelectItem>
-                      <SelectItem value="3" className="text-lg">
-                        3 months
-                      </SelectItem>
-                      <SelectItem value="4" className="text-lg">
-                        4 months
-                      </SelectItem>
-                      <SelectItem value="5" className="text-lg">
-                        5 months
-                      </SelectItem>
-                      <SelectItem value="6" className="text-lg">
-                        6 months
-                      </SelectItem>
-                      <SelectItem value="7" className="text-lg">
-                        7 months
-                      </SelectItem>
-                      <SelectItem value="8" className="text-lg">
-                        8 months
-                      </SelectItem>
-                      <SelectItem value="9" className="text-lg">
-                        9 months
-                      </SelectItem>
-                      <SelectItem value="10" className="text-lg">
-                        10 months
-                      </SelectItem>
-                      <SelectItem value="11" className="text-lg">
-                        11 months
-                      </SelectItem>
-                      <SelectItem value="12" className="text-lg">
-                        12 months
-                      </SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">
-                    Choose how long you want to lock your money. Maximum 12 months.
-                  </p>
-                </div>
+                {/* Duration Calendar Picker */}
+                <DurationCalendarPicker
+                  value={duration}
+                  onChange={setDuration}
+                  label="Lock Duration"
+                />
 
                 {/* Select Asset */}
                 <AssetSelector 
