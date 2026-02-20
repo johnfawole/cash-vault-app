@@ -169,6 +169,88 @@ export function useContract() {
       // Format amount
       const amountBigInt = formatUSDC(params.amount);
 
+      // Call withdrawLock on contract
+      const tx = await contract.withdrawLock(params.lockId, amountBigInt);
+
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+      console.log('[v0] Lock withdrawal processed:', receipt);
+      
+      return receipt;
+    } catch (error) {
+      console.error('[v0] Error in withdrawLock:', error);
+      throw error;
+    }
+  }, [switchToBase]);
+
+  const extendLock = useCallback(async (params: ExtendLockParams) => {
+    if (!window.ethereum) {
+      throw new Error('MetaMask or compatible wallet not found');
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Check if user is on Base chain
+      const network = await provider.getNetwork();
+      if (network.chainId !== BASE_CHAIN_ID) {
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
+      }
+
+      const contract = new ethers.Contract(
+        SAFE_LOCK_VAULT_ADDRESS,
+        SafeLockVaultABI,
+        signer
+      );
+
+      // Format additional duration
+      const additionalDurationSeconds = formatDurationInSeconds(params.additionalDuration);
+
+      // Call extendLock on contract
+      const tx = await contract.extendLock(params.lockId, additionalDurationSeconds);
+
+      // Wait for transaction confirmation
+      const receipt = await tx.wait();
+      console.log('[v0] Lock extended:', receipt);
+      
+      return receipt;
+    } catch (error) {
+      console.error('[v0] Error in extendLock:', error);
+      throw error;
+    }
+  }, [switchToBase]);
+
+  const addFunds = useCallback(async (params: AddFundsParams) => {
+    if (!window.ethereum) {
+      throw new Error('MetaMask or compatible wallet not found');
+    }
+
+    try {
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+
+      // Check if user is on Base chain
+      const network = await provider.getNetwork();
+      if (network.chainId !== BASE_CHAIN_ID) {
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
+      }
+
+      if (params.asset !== 'usdc') {
+        throw new Error('Only USDC is currently supported');
+      }
+
+      const contract = new ethers.Contract(
+        SAFE_LOCK_VAULT_ADDRESS,
+        SafeLockVaultABI,
+        signer
+      );
+
+      // Format amount
+      const amountBigInt = formatUSDC(params.amount);
+
       // Call addFunds on contract
       const tx = await contract.addFunds(params.lockId, amountBigInt);
 
@@ -181,7 +263,7 @@ export function useContract() {
       console.error('[v0] Error in addFunds:', error);
       throw error;
     }
-  }, []);
+  }, [switchToBase]);
 
   const createDCAPlan = useCallback(async (params: CreateDCAPlantParams) => {
     if (!window.ethereum) {
