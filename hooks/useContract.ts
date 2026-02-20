@@ -47,6 +47,51 @@ interface WithdrawDCAParams {
 }
 
 export function useContract() {
+  // Helper function to switch to Base network
+  const switchToBase = useCallback(async () => {
+    if (!window.ethereum) {
+      throw new Error('MetaMask or compatible wallet not found');
+    }
+
+    try {
+      // Attempt to switch to Base network
+      await window.ethereum.request({
+        method: 'wallet_switchEthereumChain',
+        params: [{ chainId: '0x' + BASE_CHAIN_ID.toString(16) }],
+      });
+      console.log('[v0] Switched to Base network');
+    } catch (switchError: any) {
+      // This error code indicates that the chain has not been added to MetaMask
+      if (switchError.code === 4902) {
+        try {
+          await window.ethereum.request({
+            method: 'wallet_addEthereumChain',
+            params: [
+              {
+                chainId: '0x' + BASE_CHAIN_ID.toString(16),
+                chainName: 'Base',
+                rpcUrls: ['https://mainnet.base.org'],
+                nativeCurrency: {
+                  name: 'Ether',
+                  symbol: 'ETH',
+                  decimals: 18,
+                },
+                blockExplorerUrls: ['https://basescan.org'],
+              },
+            ],
+          });
+          console.log('[v0] Added Base network to MetaMask');
+        } catch (addError) {
+          console.error('[v0] Error adding Base network:', addError);
+          throw new Error('Failed to add Base network to MetaMask');
+        }
+      } else {
+        console.error('[v0] Error switching to Base network:', switchError);
+        throw new Error('Failed to switch to Base network');
+      }
+    }
+  }, []);
+
   const createLock = useCallback(async (params: CreateLockParams) => {
     if (!window.ethereum) {
       throw new Error('MetaMask or compatible wallet not found');
@@ -107,84 +152,8 @@ export function useContract() {
       // Check if user is on Base chain
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
-      }
-
-      if (params.asset !== 'usdc') {
-        throw new Error('Only USDC is currently supported');
-      }
-
-      const contract = new ethers.Contract(
-        SAFE_LOCK_VAULT_ADDRESS,
-        SafeLockVaultABI,
-        signer
-      );
-
-      // Call claim on contract to withdraw
-      const tx = await contract.claim(params.lockId);
-      
-      // Wait for transaction confirmation
-      const receipt = await tx.wait();
-      console.log('[v0] Withdrawal receipt:', receipt);
-      
-      return receipt;
-    } catch (error) {
-      console.error('[v0] Error in withdrawLock:', error);
-      throw error;
-    }
-  }, []);
-
-  const extendLock = useCallback(async (params: ExtendLockParams) => {
-    if (!window.ethereum) {
-      throw new Error('MetaMask or compatible wallet not found');
-    }
-
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-
-      // Check if user is on Base chain
-      const network = await provider.getNetwork();
-      if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
-      }
-
-      const contract = new ethers.Contract(
-        SAFE_LOCK_VAULT_ADDRESS,
-        SafeLockVaultABI,
-        signer
-      );
-
-      // Format additional duration
-      const additionalDurationSeconds = formatDurationInSeconds(params.additionalDuration);
-
-      // Call extendLock on contract
-      const tx = await contract.extendLock(params.lockId, additionalDurationSeconds);
-
-      // Wait for transaction confirmation
-      const receipt = await tx.wait();
-      console.log('[v0] Lock extended:', receipt);
-      
-      return receipt;
-    } catch (error) {
-      console.error('[v0] Error in extendLock:', error);
-      throw error;
-    }
-  }, []);
-
-  const addFunds = useCallback(async (params: AddFundsParams) => {
-    if (!window.ethereum) {
-      throw new Error('MetaMask or compatible wallet not found');
-    }
-
-    try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
-
-      // Check if user is on Base chain
-      const network = await provider.getNetwork();
-      if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
       }
 
       if (params.asset !== 'usdc') {
@@ -234,7 +203,8 @@ export function useContract() {
       // Check if user is on Base chain
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
       }
 
       const contract = new ethers.Contract(
@@ -285,7 +255,8 @@ export function useContract() {
       // Check if user is on Base chain
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
       }
 
       const contract = new ethers.Contract(
@@ -336,7 +307,8 @@ export function useContract() {
       // Check if user is on Base chain
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
       }
 
       const contract = new ethers.Contract(
@@ -387,7 +359,8 @@ export function useContract() {
       // Check if user is on Base chain
       const network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
-        throw new Error(`Please switch to Base network (Chain ID: ${BASE_CHAIN_ID})`);
+        console.log('[v0] User not on Base network, attempting to switch...');
+        await switchToBase();
       }
 
       const contract = new ethers.Contract(
