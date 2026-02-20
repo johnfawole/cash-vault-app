@@ -14,11 +14,14 @@ import { TrendingUp, ArrowLeft, DollarSign } from "lucide-react"
 import Link from "next/link"
 
 export function DCA() {
-  const [activeTab, setActiveTab] = useState<"deposit" | "withdraw">("deposit")
-  const [formData, setFormData] = useState({
+  const [activeTab, setActiveTab] = useState<"create" | "fund" | "withdraw">("create")
+  const [createFormData, setCreateFormData] = useState({
     assetType: "",
-    investmentAmount: "",
     frequency: "",
+  })
+  const [fundFormData, setFundFormData] = useState({
+    planId: "",
+    amount: "",
   })
   const [withdrawData, setWithdrawData] = useState({
     planId: "",
@@ -28,38 +31,37 @@ export function DCA() {
 
   const { createDCAPlan, createDCAPlantWithUSDC, fundDCAPlan, withdrawDCA } = useContract()
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
 
     try {
-      if (!formData.assetType || !formData.investmentAmount || !formData.frequency) {
+      if (!createFormData.assetType || !createFormData.frequency) {
         throw new Error("Please fill in all fields")
       }
 
-      if (formData.assetType === "usdc") {
+      if (createFormData.assetType === "usdc") {
         // Create DCA plan with USDC
         const tx = await createDCAPlantWithUSDC({
-          frequency: formData.frequency
+          frequency: createFormData.frequency
         })
         console.log("[v0] DCA Plan created:", tx)
       } else {
         // Create DCA plan with ETH or other token
-        const tokenAddress = formData.assetType === "ether" 
+        const tokenAddress = createFormData.assetType === "ether" 
           ? "0x4200000000000000000000000000000000000006" // WETH on Base
-          : formData.assetType
+          : createFormData.assetType
         
         const tx = await createDCAPlan({
           tokenAddress,
-          frequency: formData.frequency
+          frequency: createFormData.frequency
         })
         console.log("[v0] DCA Plan created:", tx)
       }
 
-      setFormData({
+      setCreateFormData({
         assetType: "",
-        investmentAmount: "",
         frequency: "",
       })
       alert("DCA Plan created successfully!")
@@ -67,6 +69,36 @@ export function DCA() {
       const errorMessage = err instanceof Error ? err.message : "Failed to create DCA plan"
       setError(errorMessage)
       console.error("[v0] Error creating DCA plan:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleFundPlan = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      if (!fundFormData.planId || !fundFormData.amount) {
+        throw new Error("Please fill in all fields")
+      }
+
+      const tx = await fundDCAPlan({
+        planId: parseInt(fundFormData.planId),
+        amount: fundFormData.amount
+      })
+
+      console.log("[v0] DCA Plan funded:", tx)
+      setFundFormData({
+        planId: "",
+        amount: "",
+      })
+      alert("DCA Plan funded successfully!")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to fund DCA plan"
+      setError(errorMessage)
+      console.error("[v0] Error funding DCA plan:", err)
     } finally {
       setIsLoading(false)
     }
@@ -126,13 +158,22 @@ export function DCA() {
         <div className="mb-8">
           <div className="flex gap-4 border-b border-border">
             <button
-              onClick={() => setActiveTab("deposit")}
+              onClick={() => setActiveTab("create")}
               className={`px-6 py-4 text-lg font-semibold transition-colors relative ${
-                activeTab === "deposit" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                activeTab === "create" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              Start DCA
-              {activeTab === "deposit" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+              Create Plan
+              {activeTab === "create" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
+            </button>
+            <button
+              onClick={() => setActiveTab("fund")}
+              className={`px-6 py-4 text-lg font-semibold transition-colors relative ${
+                activeTab === "fund" ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Fund Plan
+              {activeTab === "fund" && <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
             </button>
             <button
               onClick={() => setActiveTab("withdraw")}
@@ -146,43 +187,24 @@ export function DCA() {
           </div>
         </div>
 
-        {activeTab === "deposit" ? (
+        {activeTab === "create" ? (
           <Card className="border border-border bg-card">
             <CardContent className="p-8 md:p-12">
-              <form onSubmit={handleSubmit} className="space-y-8">
+              <form onSubmit={handleCreatePlan} className="space-y-8">
                 {/* Asset Selector */}
                 <AssetSelector 
-                  value={formData.assetType} 
-                  onChange={(value) => setFormData({ ...formData, assetType: value })}
+                  value={createFormData.assetType} 
+                  onChange={(value) => setCreateFormData({ ...createFormData, assetType: value })}
                   label="Select Asset"
                 />
 
                 <div className="space-y-2">
-                  <Label htmlFor="investmentAmount" className="text-base font-semibold text-foreground">
-                    Investment Amount Per Interval
-                  </Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="investmentAmount"
-                      type="number"
-                      placeholder="100"
-                      value={formData.investmentAmount}
-                      onChange={(e) => setFormData({ ...formData, investmentAmount: e.target.value })}
-                      className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
-                      required
-                    />
-                  </div>
-                  <p className="text-sm text-muted-foreground">How much do you want to invest each time?</p>
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="frequency" className="text-base font-semibold text-foreground">
-                    Frequency
+                    Investment Frequency
                   </Label>
                   <Select
-                    value={formData.frequency}
-                    onValueChange={(value) => setFormData({ ...formData, frequency: value })}
+                    value={createFormData.frequency}
+                    onValueChange={(value) => setCreateFormData({ ...createFormData, frequency: value })}
                   >
                     <SelectTrigger className="h-14 text-base bg-background border-border focus:border-primary">
                       <SelectValue placeholder="Select investment frequency" />
@@ -207,7 +229,63 @@ export function DCA() {
                   disabled={isLoading}
                   className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                 >
-                  {isLoading ? "Creating Plan..." : "Start DCA Investment"}
+                  {isLoading ? "Creating Plan..." : "Create DCA Plan"}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        ) : activeTab === "fund" ? (
+          <Card className="border border-border bg-card">
+            <CardContent className="p-8 md:p-12">
+              <form onSubmit={handleFundPlan} className="space-y-8">
+                <div className="space-y-2">
+                  <Label htmlFor="fund-plan-id" className="text-base font-semibold text-foreground">
+                    Plan ID
+                  </Label>
+                  <Input
+                    id="fund-plan-id"
+                    type="number"
+                    placeholder="Enter your plan ID"
+                    value={fundFormData.planId}
+                    onChange={(e) => setFundFormData({ ...fundFormData, planId: e.target.value })}
+                    className="h-14 text-base bg-background border-border focus:border-primary"
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">The unique ID of your DCA plan</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fund-amount" className="text-base font-semibold text-foreground">
+                    Funding Amount
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="fund-amount"
+                      type="number"
+                      placeholder="100"
+                      value={fundFormData.amount}
+                      onChange={(e) => setFundFormData({ ...fundFormData, amount: e.target.value })}
+                      className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
+                      required
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">How much do you want to fund the plan with?</p>
+                </div>
+
+                {error && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={isLoading}
+                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
+                >
+                  {isLoading ? "Funding Plan..." : "Fund DCA Plan"}
                 </Button>
               </form>
             </CardContent>
