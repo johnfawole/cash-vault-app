@@ -216,11 +216,19 @@ export function useContract() {
 
   const createDCAPlan = useCallback(async (params: CreateDCAPlantParams) => {
     if (!window.ethereum) {
-      throw new Error('MetaMask or compatible wallet not found');
+      throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
     }
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
+      
+      try {
+        const signer = await provider.getSigner();
+      } catch (signerError) {
+        // Signer error indicates wallet is not connected
+        throw new Error('Please connect your wallet first. Click the "Connect Wallet" button in the header.');
+      }
+
       const signer = await provider.getSigner();
 
       // Check if user is on Base chain
@@ -247,6 +255,11 @@ export function useContract() {
       
       return receipt;
     } catch (error) {
+      // Handle user rejection specifically
+      if (error instanceof Error && error.message.includes('rejected')) {
+        console.error('[v0] Error in createDCAPlan: User denied wallet access');
+        throw new Error('You need to connect your wallet and approve the transaction. Please try again.');
+      }
       console.error('[v0] Error in createDCAPlan:', error);
       throw error;
     }
@@ -254,11 +267,19 @@ export function useContract() {
 
   const createDCAPlantWithUSDC = useCallback(async (params: CreateDCAPlantWithUSDCParams) => {
     if (!window.ethereum) {
-      throw new Error('MetaMask or compatible wallet not found');
+      throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
     }
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
+      
+      try {
+        const signer = await provider.getSigner();
+      } catch (signerError) {
+        // Signer error indicates wallet is not connected
+        throw new Error('Please connect your wallet first. Click the "Connect Wallet" button in the header.');
+      }
+
       const signer = await provider.getSigner();
 
       // Check if user is on Base chain
@@ -285,6 +306,11 @@ export function useContract() {
       
       return receipt;
     } catch (error) {
+      // Handle user rejection specifically
+      if (error instanceof Error && error.message.includes('rejected')) {
+        console.error('[v0] Error in createDCAPlantWithUSDC: User denied wallet access');
+        throw new Error('You need to connect your wallet and approve the transaction. Please try again.');
+      }
       console.error('[v0] Error in createDCAPlantWithUSDC:', error);
       throw error;
     }
@@ -292,11 +318,19 @@ export function useContract() {
 
   const fundDCAPlan = useCallback(async (params: FundDCAPlantParams) => {
     if (!window.ethereum) {
-      throw new Error('MetaMask or compatible wallet not found');
+      throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
     }
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
+      
+      try {
+        const signer = await provider.getSigner();
+      } catch (signerError) {
+        // Signer error indicates wallet is not connected
+        throw new Error('Please connect your wallet first. Click the "Connect Wallet" button in the header.');
+      }
+
       const signer = await provider.getSigner();
 
       // Check if user is on Base chain
@@ -323,6 +357,11 @@ export function useContract() {
       
       return receipt;
     } catch (error) {
+      // Handle user rejection specifically
+      if (error instanceof Error && error.message.includes('rejected')) {
+        console.error('[v0] Error in fundDCAPlan: User denied wallet access');
+        throw new Error('You need to connect your wallet and approve the transaction. Please try again.');
+      }
       console.error('[v0] Error in fundDCAPlan:', error);
       throw error;
     }
@@ -330,11 +369,19 @@ export function useContract() {
 
   const withdrawDCA = useCallback(async (params: WithdrawDCAParams) => {
     if (!window.ethereum) {
-      throw new Error('MetaMask or compatible wallet not found');
+      throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
     }
 
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
+      
+      try {
+        const signer = await provider.getSigner();
+      } catch (signerError) {
+        // Signer error indicates wallet is not connected
+        throw new Error('Please connect your wallet first. Click the "Connect Wallet" button in the header.');
+      }
+
       const signer = await provider.getSigner();
 
       // Check if user is on Base chain
@@ -358,6 +405,11 @@ export function useContract() {
       
       return receipt;
     } catch (error) {
+      // Handle user rejection specifically
+      if (error instanceof Error && error.message.includes('rejected')) {
+        console.error('[v0] Error in withdrawDCA: User denied wallet access');
+        throw new Error('You need to connect your wallet and approve the transaction. Please try again.');
+      }
       console.error('[v0] Error in withdrawDCA:', error);
       throw error;
     }
