@@ -3,12 +3,14 @@
 import type React from "react"
 
 import { useState } from "react"
+import { useContract } from "@/hooks/useContract"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { TrendingUp, ArrowLeft, DollarSign, Coins } from "lucide-react"
+import { AssetSelector } from "@/components/asset-selector"
+import { TrendingUp, ArrowLeft, DollarSign } from "lucide-react"
 import Link from "next/link"
 
 export function DCA() {
@@ -19,18 +21,83 @@ export function DCA() {
     frequency: "",
   })
   const [withdrawData, setWithdrawData] = useState({
-    assetType: "",
-    withdrawAmount: "",
+    planId: "",
   })
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const { createDCAPlan, createDCAPlantWithUSDC, fundDCAPlan, withdrawDCA } = useContract()
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("DCA Investment Plan:", formData)
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      if (!formData.assetType || !formData.investmentAmount || !formData.frequency) {
+        throw new Error("Please fill in all fields")
+      }
+
+      if (formData.assetType === "usdc") {
+        // Create DCA plan with USDC
+        const tx = await createDCAPlantWithUSDC({
+          frequency: formData.frequency
+        })
+        console.log("[v0] DCA Plan created:", tx)
+      } else {
+        // Create DCA plan with ETH or other token
+        const tokenAddress = formData.assetType === "ether" 
+          ? "0x4200000000000000000000000000000000000006" // WETH on Base
+          : formData.assetType
+        
+        const tx = await createDCAPlan({
+          tokenAddress,
+          frequency: formData.frequency
+        })
+        console.log("[v0] DCA Plan created:", tx)
+      }
+
+      setFormData({
+        assetType: "",
+        investmentAmount: "",
+        frequency: "",
+      })
+      alert("DCA Plan created successfully!")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create DCA plan"
+      setError(errorMessage)
+      console.error("[v0] Error creating DCA plan:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
-  const handleWithdraw = (e: React.FormEvent) => {
+  const handleWithdraw = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Withdraw DCA:", withdrawData)
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      if (!withdrawData.planId) {
+        throw new Error("Please enter a plan ID")
+      }
+
+      const tx = await withdrawDCA({
+        planId: parseInt(withdrawData.planId)
+      })
+
+      console.log("[v0] DCA withdrawal processed:", tx)
+      setWithdrawData({
+        planId: "",
+      })
+      alert("Withdrawal successful!")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to withdraw"
+      setError(errorMessage)
+      console.error("[v0] Error withdrawing:", err)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -83,27 +150,12 @@ export function DCA() {
           <Card className="border border-border bg-card">
             <CardContent className="p-8 md:p-12">
               <form onSubmit={handleSubmit} className="space-y-8">
-                <div className="space-y-2">
-                  <Label htmlFor="assetType" className="text-base font-semibold text-foreground">
-                    Asset Type
-                  </Label>
-                  <div className="relative">
-                    <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                    <Select
-                      value={formData.assetType}
-                      onValueChange={(value) => setFormData({ ...formData, assetType: value })}
-                    >
-                      <SelectTrigger className="h-14 text-base pl-12 bg-background border-border focus:border-primary">
-                        <SelectValue placeholder="Select asset to invest in" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="usdc">USDC</SelectItem>
-                        <SelectItem value="ether">Ether (ETH)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Choose the asset you want to invest in</p>
-                </div>
+                {/* Asset Selector */}
+                <AssetSelector 
+                  value={formData.assetType} 
+                  onChange={(value) => setFormData({ ...formData, assetType: value })}
+                  label="Select Asset"
+                />
 
                 <div className="space-y-2">
                   <Label htmlFor="investmentAmount" className="text-base font-semibold text-foreground">
@@ -143,12 +195,19 @@ export function DCA() {
                   <p className="text-sm text-muted-foreground">How often do you want to invest?</p>
                 </div>
 
+                {error && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
+                    {error}
+                  </div>
+                )}
+
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
+                  disabled={isLoading}
+                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                 >
-                  Start DCA Investment
+                  {isLoading ? "Creating Plan..." : "Start DCA Investment"}
                 </Button>
               </form>
             </CardContent>
@@ -158,54 +217,34 @@ export function DCA() {
             <CardContent className="p-8 md:p-12">
               <form onSubmit={handleWithdraw} className="space-y-8">
                 <div className="space-y-2">
-                  <Label htmlFor="withdraw-asset" className="text-base font-semibold text-foreground">
-                    Asset Type
+                  <Label htmlFor="plan-id" className="text-base font-semibold text-foreground">
+                    Plan ID
                   </Label>
-                  <div className="relative">
-                    <Coins className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground z-10" />
-                    <Select
-                      value={withdrawData.assetType}
-                      onValueChange={(value) => setWithdrawData({ ...withdrawData, assetType: value })}
-                    >
-                      <SelectTrigger className="h-14 text-base pl-12 bg-background border-border focus:border-primary">
-                        <SelectValue placeholder="Select asset to withdraw" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="usdc">USDC</SelectItem>
-                        <SelectItem value="ether">Ether (ETH)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <p className="text-sm text-muted-foreground">Which asset do you want to withdraw?</p>
+                  <Input
+                    id="plan-id"
+                    type="number"
+                    placeholder="Enter your plan ID"
+                    value={withdrawData.planId}
+                    onChange={(e) => setWithdrawData({ ...withdrawData, planId: e.target.value })}
+                    className="h-14 text-base bg-background border-border focus:border-primary"
+                    required
+                  />
+                  <p className="text-sm text-muted-foreground">The unique ID of your DCA plan</p>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="withdraw-amount" className="text-base font-semibold text-foreground">
-                    Withdrawal Amount
-                  </Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
-                    <Input
-                      id="withdraw-amount"
-                      type="number"
-                      placeholder="500"
-                      value={withdrawData.withdrawAmount}
-                      onChange={(e) => setWithdrawData({ ...withdrawData, withdrawAmount: e.target.value })}
-                      className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
-                      required
-                    />
+                {error && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
+                    {error}
                   </div>
-                  <p className="text-sm text-muted-foreground">
-                    How much do you want to withdraw from your DCA holdings?
-                  </p>
-                </div>
+                )}
 
                 <Button
                   type="submit"
                   size="lg"
-                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all"
+                  disabled={isLoading}
+                  className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                 >
-                  Withdraw Funds
+                  {isLoading ? "Processing..." : "Withdraw Funds"}
                 </Button>
               </form>
             </CardContent>
