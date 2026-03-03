@@ -238,8 +238,3 @@ contract TargetedSavingsVaultTest is Test {
         assertEq(vault.contributorTotals(goalId, contributor), 3000 * 10**18);
     }
 }
-
-
-
-
-

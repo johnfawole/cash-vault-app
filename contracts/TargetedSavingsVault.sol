@@ -222,6 +222,3 @@ contract TargetedSavingsVault is ReentrancyGuard, Ownable {
         return createGoal(usdc, name, targetAmount, deadline, allowExternalContributors, initialContribution);
     }
 }
-
-
-
