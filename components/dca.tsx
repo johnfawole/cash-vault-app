@@ -48,7 +48,7 @@ export function DCA() {
       } else {
         // Create DCA plan with ETH or other token
         const tokenAddress = createFormData.assetType === "ether" 
-          ? "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE" // ETH address (not WETH)
+          ? "0x4200000000000000000000000000000000000006" // ETH on Base
           : createFormData.assetType
         
         const tx = await createDCAPlan({
