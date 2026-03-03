@@ -1,30 +1,31 @@
-# CashVault app design
+🏦 CashVault
 
-*Automatically synced with your [v0.app](https://v0.app) deployments*
+CashVault helps you build wealth gradually by automating savings into Bitcoin, Ether, and USDC.
 
-[![Deployed on Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel)](https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design)
-[![Built with v0](https://img.shields.io/badge/Built%20with-v0.app-black?style=for-the-badge)](https://v0.app/chat/o2UUoCkVV5b)
+Designed for everyday people, long-term investors, and builders, CashVault makes it simple to dollar-cost average (DCA) into crypto — directly from your wallet, on-chain, and non-custodial.
 
-## Overview
+🚀 Why CashVault?
 
-This repository will stay in sync with your deployed chats on [v0.app](https://v0.app).
-Any changes you make to your deployed app will be automatically pushed to this repository from [v0.app](https://v0.app).
+₿ Stack Bitcoin automatically
 
-## Deployment
+Ξ Accumulate Ether over time
 
-Your project is live at:
+💵 Save in USDC for stability
 
-**[https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design](https://vercel.com/johnfawoles-projects/v0-cash-vault-app-design)**
+🔁 Automated recurring plans (DCA)
 
-## Build your app
+🔒 Non-custodial — you stay in control
 
-Continue building your app on:
+⚡ Built on Base for low fees
 
-**[https://v0.app/chat/o2UUoCkVV5b](https://v0.app/chat/o2UUoCkVV5b)**
+🧠 How it works
 
-## How It Works
+Connect your wallet
 
-1. Create and modify your project using [v0.app](https://v0.app)
-2. Deploy your chats from the v0 interface
-3. Changes are automatically pushed to this repository
-4. Vercel deploys the latest version from this repository
+Create a savings plan
+
+Fund once
+
+Grow consistently over time
+
+Wealth isn’t built overnight. It’s built consistently.
