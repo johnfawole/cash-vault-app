@@ -270,10 +270,6 @@ export function useContract() {
       throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
     }
 
-    if (!DCA_INVESTMENT_ADDRESS || DCA_INVESTMENT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      throw new Error('DCA contract address not configured. Set NEXT_PUBLIC_DCA_INVESTMENT_ADDRESS in environment variables.');
-    }
-
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       
@@ -324,10 +320,6 @@ export function useContract() {
   const createDCAPlantWithUSDC = useCallback(async (params: CreateDCAPlantWithUSDCParams) => {
     if (!window.ethereum) {
       throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
-    }
-
-    if (!DCA_INVESTMENT_ADDRESS || DCA_INVESTMENT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      throw new Error('DCA contract address not configured. Set NEXT_PUBLIC_DCA_INVESTMENT_ADDRESS in environment variables.');
     }
 
     try {
@@ -382,10 +374,6 @@ export function useContract() {
       throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
     }
 
-    if (!DCA_INVESTMENT_ADDRESS || DCA_INVESTMENT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      throw new Error('DCA contract address not configured. Set NEXT_PUBLIC_DCA_INVESTMENT_ADDRESS in environment variables.');
-    }
-
     try {
       const provider = new ethers.BrowserProvider(window.ethereum);
       
@@ -436,10 +424,6 @@ export function useContract() {
   const withdrawDCA = useCallback(async (params: WithdrawDCAParams) => {
     if (!window.ethereum) {
       throw new Error('MetaMask or compatible wallet not found. Please install MetaMask to continue.');
-    }
-
-    if (!DCA_INVESTMENT_ADDRESS || DCA_INVESTMENT_ADDRESS === '0x0000000000000000000000000000000000000000') {
-      throw new Error('DCA contract address not configured. Set NEXT_PUBLIC_DCA_INVESTMENT_ADDRESS in environment variables.');
     }
 
     try {
