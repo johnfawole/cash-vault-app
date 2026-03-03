@@ -144,52 +144,6 @@ export function DCA() {
     }
   }
 
-      if (!userId) {
-        throw new Error("Please connect your wallet first")
-      }
-
-      let planId: number | null = null
-      let assetSymbol = ""
-
-      if (createFormData.assetType === "usdc") {
-        // Create DCA plan with USDC
-        const tx = await createDCAPlantWithUSDC({})
-        console.log("[v0] DCA Plan created:", tx)
-        assetSymbol = "USDC"
-        // Extract plan ID from transaction receipt
-        // This depends on the contract event emission
-      } else {
-        // Create DCA plan with ETH
-        const tokenAddress = createFormData.assetType === "ether" 
-          ? "0x4200000000000000000000000000000000000006"
-          : createFormData.assetType
-        
-        const tx = await createDCAPlan({
-          tokenAddress,
-        })
-        console.log("[v0] DCA Plan created:", tx)
-        assetSymbol = createFormData.assetType === "ether" ? "ETH" : "TOKEN"
-      }
-
-      // TODO: Extract plan ID from transaction logs and save to database
-      // For now, we'll need the user to enter the plan ID manually the first time
-      // In production, you'd parse the contract events to get the planId
-
-      setCreateFormData({
-        assetType: "",
-        emailRemindersEnabled: false,
-        userEmail: "",
-      })
-      alert("DCA Plan created successfully! Refresh the Fund/Withdraw tabs to see your new plan.")
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to create DCA plan"
-      setError(errorMessage)
-      console.error("[v0] Error creating DCA plan:", err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleFundPlan = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
