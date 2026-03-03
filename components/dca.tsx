@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AssetSelector } from "@/components/asset-selector"
-import { TrendingUp, ArrowLeft, DollarSign, Mail, Bell } from "lucide-react"
+import { TrendingUp, ArrowLeft, DollarSign, Mail, Bell, Wallet } from "lucide-react"
 import Link from "next/link"
 
 interface DCAPlanlData {
@@ -50,8 +50,29 @@ export function DCA() {
   const [userId, setUserId] = useState<string | null>(null)
   const [userPlans, setUserPlans] = useState<DCAPlanlData[]>([])
   const [plansLoading, setPlansLoading] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   const { createDCAPlan, createDCAPlantWithUSDC, fundDCAPlan, withdrawDCA } = useContract()
+
+  const handleConnectWallet = async () => {
+    setIsConnecting(true)
+    try {
+      if (!window.ethereum) {
+        throw new Error("MetaMask or compatible wallet not found. Please install MetaMask.")
+      }
+      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
+      if (accounts && accounts.length > 0) {
+        setUserId(accounts[0].toLowerCase())
+        setError(null)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
+      setError(errorMessage)
+      console.error("[v0] Error connecting wallet:", err)
+    } finally {
+      setIsConnecting(false)
+    }
+  }
 
   // Get user ID from wallet
   useEffect(() => {
@@ -207,13 +228,32 @@ export function DCA() {
   return (
     <div className="min-h-screen bg-background py-12 md:py-20">
       <div className="container mx-auto px-4 max-w-4xl">
-        <Link
-          href="/"
-          className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground mb-8 transition-colors"
-        >
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Home
-        </Link>
+        {/* Back Button and Wallet Connection */}
+        <div className="flex items-center justify-between mb-8">
+          <Link
+            href="/"
+            className="inline-flex items-center text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Home
+          </Link>
+
+          {!userId ? (
+            <Button
+              onClick={handleConnectWallet}
+              disabled={isConnecting}
+              className="flex items-center gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+              size="sm"
+            >
+              <Wallet className="w-4 h-4" />
+              {isConnecting ? "Connecting..." : "Connect Wallet"}
+            </Button>
+          ) : (
+            <div className="text-sm font-medium text-foreground bg-secondary px-4 py-2 rounded-lg">
+              {userId.slice(0, 6)}...{userId.slice(-4)}
+            </div>
+          )}
+        </div>
 
         <div className="mb-12">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-lg bg-secondary border border-border mb-6">
