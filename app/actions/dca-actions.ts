@@ -9,6 +9,9 @@ export interface DCAPlanlData {
   asset_token: string
   asset_symbol: string
   funded_amount: number
+  email_reminders_enabled: boolean
+  reminder_frequency: string
+  user_email: string | null
   created_at: string
 }
 
@@ -16,7 +19,9 @@ export async function saveDCAPlan(
   userId: string,
   planId: number,
   assetToken: string,
-  assetSymbol: string
+  assetSymbol: string,
+  emailRemindersEnabled: boolean = false,
+  userEmail: string | null = null
 ) {
   const supabase = await createClient()
 
@@ -29,6 +34,9 @@ export async function saveDCAPlan(
         asset_token: assetToken,
         asset_symbol: assetSymbol,
         funded_amount: 0,
+        email_reminders_enabled: emailRemindersEnabled,
+        reminder_frequency: 'weekly',
+        user_email: userEmail,
       })
       .select()
 

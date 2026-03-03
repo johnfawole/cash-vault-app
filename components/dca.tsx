@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { AssetSelector } from "@/components/asset-selector"
-import { TrendingUp, ArrowLeft, DollarSign } from "lucide-react"
+import { TrendingUp, ArrowLeft, DollarSign, Mail, Bell } from "lucide-react"
 import Link from "next/link"
 
 interface DCAPlanlData {
@@ -24,10 +24,18 @@ interface DCAPlanlData {
   created_at: string
 }
 
+interface CreateFormState {
+  assetType: string
+  emailRemindersEnabled: boolean
+  userEmail: string
+}
+
 export function DCA() {
   const [activeTab, setActiveTab] = useState<"create" | "fund" | "withdraw">("create")
-  const [createFormData, setCreateFormData] = useState({
+  const [createFormData, setCreateFormData] = useState<CreateFormState>({
     assetType: "",
+    emailRemindersEnabled: false,
+    userEmail: "",
   })
   const [fundFormData, setFundFormData] = useState({
     planId: "",
@@ -91,6 +99,51 @@ export function DCA() {
         throw new Error("Please select an asset")
       }
 
+      if (createFormData.emailRemindersEnabled && !createFormData.userEmail) {
+        throw new Error("Please enter your email address for reminders")
+      }
+
+      if (createFormData.emailRemindersEnabled && !createFormData.userEmail.includes("@")) {
+        throw new Error("Please enter a valid email address")
+      }
+
+      if (!userId) {
+        throw new Error("Please connect your wallet first")
+      }
+
+      let assetSymbol = ""
+
+      if (createFormData.assetType === "usdc") {
+        const tx = await createDCAPlantWithUSDC({})
+        console.log("[v0] DCA Plan created:", tx)
+        assetSymbol = "USDC"
+      } else {
+        const tokenAddress = createFormData.assetType === "ether" 
+          ? "0x4200000000000000000000000000000000000006"
+          : createFormData.assetType
+        
+        const tx = await createDCAPlan({
+          tokenAddress,
+        })
+        console.log("[v0] DCA Plan created:", tx)
+        assetSymbol = createFormData.assetType === "ether" ? "ETH" : "TOKEN"
+      }
+
+      setCreateFormData({
+        assetType: "",
+        emailRemindersEnabled: false,
+        userEmail: "",
+      })
+      alert("DCA Plan created successfully! Refresh the Fund/Withdraw tabs to see your new plan.")
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Failed to create DCA plan"
+      setError(errorMessage)
+      console.error("[v0] Error creating DCA plan:", err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
       if (!userId) {
         throw new Error("Please connect your wallet first")
       }
@@ -124,6 +177,8 @@ export function DCA() {
 
       setCreateFormData({
         assetType: "",
+        emailRemindersEnabled: false,
+        userEmail: "",
       })
       alert("DCA Plan created successfully! Refresh the Fund/Withdraw tabs to see your new plan.")
     } catch (err) {
@@ -260,6 +315,53 @@ export function DCA() {
                   onChange={(value) => setCreateFormData({ ...createFormData, assetType: value })}
                   label="Select Asset"
                 />
+
+                {/* Email Reminders Section */}
+                <div className="space-y-4 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                  <div className="flex items-start gap-3">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Bell className="w-5 h-5 text-primary" />
+                        <Label className="text-base font-semibold text-foreground cursor-pointer">
+                          Get Email Reminders
+                        </Label>
+                      </div>
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Stay consistent with your investment strategy. We'll send you a friendly reminder when it's time to execute your {createFormData.assetType === "usdc" ? "USDC" : createFormData.assetType === "ether" ? "ETH" : "token"} purchase, so you never miss an opportunity to invest.
+                      </p>
+                      
+                      <div className="space-y-3">
+                        <label className="flex items-center gap-3 cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={createFormData.emailRemindersEnabled}
+                            onChange={(e) => setCreateFormData({ ...createFormData, emailRemindersEnabled: e.target.checked })}
+                            className="w-4 h-4 rounded border-border"
+                          />
+                          <span className="text-sm font-medium text-foreground">Enable email reminders for this plan</span>
+                        </label>
+
+                        {createFormData.emailRemindersEnabled && (
+                          <div className="space-y-2 pl-7">
+                            <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                              Email Address
+                            </Label>
+                            <Input
+                              id="email"
+                              type="email"
+                              placeholder="you@example.com"
+                              value={createFormData.userEmail}
+                              onChange={(e) => setCreateFormData({ ...createFormData, userEmail: e.target.value })}
+                              className="h-10 text-sm bg-background border-border focus:border-primary"
+                              required={createFormData.emailRemindersEnabled}
+                            />
+                            <p className="text-xs text-muted-foreground">We'll send reminders based on your plan's frequency</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
 
                 {error && (
                   <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
