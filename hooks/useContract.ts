@@ -30,11 +30,10 @@ interface AddFundsParams {
 
 interface CreateDCAPlantParams {
   tokenAddress: string;
-  frequency: string; // 'daily', 'weekly', 'monthly'
 }
 
 interface CreateDCAPlantWithUSDCParams {
-  frequency: string; // 'daily', 'weekly', 'monthly'
+  // No parameters needed
 }
 
 interface FundDCAPlantParams {
@@ -44,6 +43,7 @@ interface FundDCAPlantParams {
 
 interface WithdrawDCAParams {
   planId: number;
+  amount: string;
 }
 
 export function useContract() {
@@ -295,11 +295,8 @@ export function useContract() {
         signer
       );
 
-      // Format frequency
-      const frequencyInSeconds = formatDCAFrequency(params.frequency);
-
-      // Call createPlan on contract
-      const tx = await contract.createPlan(params.tokenAddress, frequencyInSeconds);
+      // Call createPlan on contract with token address
+      const tx = await contract.createPlan(params.tokenAddress);
 
       // Wait for transaction confirmation
       const receipt = await tx.wait();
@@ -347,11 +344,8 @@ export function useContract() {
         signer
       );
 
-      // Format frequency
-      const frequencyInSeconds = formatDCAFrequency(params.frequency);
-
-      // Call createPlanWithUSDC on contract
-      const tx = await contract.createPlanWithUSDC(frequencyInSeconds);
+      // Call createPlanWithUSDC on contract (no parameters needed, uses USDC set by owner)
+      const tx = await contract.createPlanWithUSDC();
 
       // Wait for transaction confirmation
       const receipt = await tx.wait();
@@ -451,8 +445,11 @@ export function useContract() {
         signer
       );
 
-      // Call withdraw on contract
-      const tx = await contract.withdraw(params.planId);
+      // Format amount (assuming USDC with 6 decimals)
+      const amountBigInt = formatUSDC(params.amount);
+
+      // Call withdraw on contract with planId and amount
+      const tx = await contract.withdraw(params.planId, amountBigInt);
 
       // Wait for transaction confirmation
       const receipt = await tx.wait();

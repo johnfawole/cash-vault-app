@@ -17,7 +17,6 @@ export function DCA() {
   const [activeTab, setActiveTab] = useState<"create" | "fund" | "withdraw">("create")
   const [createFormData, setCreateFormData] = useState({
     assetType: "",
-    frequency: "",
   })
   const [fundFormData, setFundFormData] = useState({
     planId: "",
@@ -25,6 +24,7 @@ export function DCA() {
   })
   const [withdrawData, setWithdrawData] = useState({
     planId: "",
+    amount: "",
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -37,15 +37,13 @@ export function DCA() {
     setIsLoading(true)
 
     try {
-      if (!createFormData.assetType || !createFormData.frequency) {
-        throw new Error("Please fill in all fields")
+      if (!createFormData.assetType) {
+        throw new Error("Please select an asset")
       }
 
       if (createFormData.assetType === "usdc") {
         // Create DCA plan with USDC
-        const tx = await createDCAPlantWithUSDC({
-          frequency: createFormData.frequency
-        })
+        const tx = await createDCAPlantWithUSDC({})
         console.log("[v0] DCA Plan created:", tx)
       } else {
         // Create DCA plan with ETH or other token
@@ -55,14 +53,12 @@ export function DCA() {
         
         const tx = await createDCAPlan({
           tokenAddress,
-          frequency: createFormData.frequency
         })
         console.log("[v0] DCA Plan created:", tx)
       }
 
       setCreateFormData({
         assetType: "",
-        frequency: "",
       })
       alert("DCA Plan created successfully!")
     } catch (err) {
@@ -110,17 +106,19 @@ export function DCA() {
     setIsLoading(true)
 
     try {
-      if (!withdrawData.planId) {
-        throw new Error("Please enter a plan ID")
+      if (!withdrawData.planId || !withdrawData.amount) {
+        throw new Error("Please enter plan ID and amount")
       }
 
       const tx = await withdrawDCA({
-        planId: parseInt(withdrawData.planId)
+        planId: parseInt(withdrawData.planId),
+        amount: withdrawData.amount
       })
 
       console.log("[v0] DCA withdrawal processed:", tx)
       setWithdrawData({
         planId: "",
+        amount: "",
       })
       alert("Withdrawal successful!")
     } catch (err) {
@@ -197,25 +195,6 @@ export function DCA() {
                   onChange={(value) => setCreateFormData({ ...createFormData, assetType: value })}
                   label="Select Asset"
                 />
-
-                <div className="space-y-2">
-                  <Label htmlFor="frequency" className="text-base font-semibold text-foreground">
-                    Investment Frequency
-                  </Label>
-                  <Select
-                    value={createFormData.frequency}
-                    onValueChange={(value) => setCreateFormData({ ...createFormData, frequency: value })}
-                  >
-                    <SelectTrigger className="h-14 text-base bg-background border-border focus:border-primary">
-                      <SelectValue placeholder="Select investment frequency" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="weekly">Weekly</SelectItem>
-                      <SelectItem value="monthly">Monthly</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <p className="text-sm text-muted-foreground">How often do you want to invest?</p>
-                </div>
 
                 {error && (
                   <div className="p-4 bg-red-500/10 border border-red-500/50 rounded-lg text-red-600 text-sm">
@@ -308,6 +287,26 @@ export function DCA() {
                     required
                   />
                   <p className="text-sm text-muted-foreground">The unique ID of your DCA plan</p>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="withdraw-amount" className="text-base font-semibold text-foreground">
+                    Amount to Withdraw
+                  </Label>
+                  <div className="relative">
+                    <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+                    <Input
+                      id="withdraw-amount"
+                      type="number"
+                      step="0.01"
+                      placeholder="Enter amount"
+                      value={withdrawData.amount}
+                      onChange={(e) => setWithdrawData({ ...withdrawData, amount: e.target.value })}
+                      className="h-14 text-base pl-12 bg-background border-border focus:border-primary"
+                      required
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground">How much do you want to withdraw?</p>
                 </div>
 
                 {error && (
