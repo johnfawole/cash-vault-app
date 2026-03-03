@@ -1,6 +1,7 @@
 // Contract addresses and configuration
 export const SAFE_LOCK_VAULT_ADDRESS = '0x8a1125751ECc759EC506Ad5aD7E0bb3F95e967DF' as const;
-export const DCA_INVESTMENT_ADDRESS = '0x8a1125751ECc759EC506Ad5aD7E0bb3F95e967DF' as const; // Update with actual DCA contract address
+// IMPORTANT: Set your actual DCA Investment contract address via NEXT_PUBLIC_DCA_INVESTMENT_ADDRESS env var
+export const DCA_INVESTMENT_ADDRESS = (process.env.NEXT_PUBLIC_DCA_INVESTMENT_ADDRESS || '0x0000000000000000000000000000000000000000') as const;
 export const BASE_CHAIN_ID = 8453;
 
 // USDC on Base
