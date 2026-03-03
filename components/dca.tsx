@@ -2,8 +2,9 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useContract } from "@/hooks/useContract"
+import { saveDCAPlan, getUserDCAPlans } from "@/app/actions/dca-actions"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -12,6 +13,16 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AssetSelector } from "@/components/asset-selector"
 import { TrendingUp, ArrowLeft, DollarSign } from "lucide-react"
 import Link from "next/link"
+
+interface DCAPlanlData {
+  id: number
+  user_id: string
+  plan_id: number
+  asset_token: string
+  asset_symbol: string
+  funded_amount: number
+  created_at: string
+}
 
 export function DCA() {
   const [activeTab, setActiveTab] = useState<"create" | "fund" | "withdraw">("create")
@@ -28,8 +39,47 @@ export function DCA() {
   })
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
+  const [userPlans, setUserPlans] = useState<DCAPlanlData[]>([])
+  const [plansLoading, setPlansLoading] = useState(false)
 
   const { createDCAPlan, createDCAPlantWithUSDC, fundDCAPlan, withdrawDCA } = useContract()
+
+  // Get user ID from wallet
+  useEffect(() => {
+    const getConnectedAddress = async () => {
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: "eth_accounts" })
+          if (accounts && accounts.length > 0) {
+            setUserId(accounts[0].toLowerCase())
+          }
+        } catch (err) {
+          console.error("[v0] Error getting wallet address:", err)
+        }
+      }
+    }
+
+    getConnectedAddress()
+  }, [])
+
+  // Fetch user's plans when user ID or tab changes
+  useEffect(() => {
+    const fetchPlans = async () => {
+      if (!userId) return
+      
+      setPlansLoading(true)
+      const { data } = await getUserDCAPlans(userId)
+      if (data) {
+        setUserPlans(data)
+      }
+      setPlansLoading(false)
+    }
+
+    if (activeTab === "fund" || activeTab === "withdraw") {
+      fetchPlans()
+    }
+  }, [userId, activeTab])
 
   const handleCreatePlan = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -41,26 +91,41 @@ export function DCA() {
         throw new Error("Please select an asset")
       }
 
+      if (!userId) {
+        throw new Error("Please connect your wallet first")
+      }
+
+      let planId: number | null = null
+      let assetSymbol = ""
+
       if (createFormData.assetType === "usdc") {
         // Create DCA plan with USDC
         const tx = await createDCAPlantWithUSDC({})
         console.log("[v0] DCA Plan created:", tx)
+        assetSymbol = "USDC"
+        // Extract plan ID from transaction receipt
+        // This depends on the contract event emission
       } else {
-        // Create DCA plan with ETH or other token
+        // Create DCA plan with ETH
         const tokenAddress = createFormData.assetType === "ether" 
-          ? "0x4200000000000000000000000000000000000006" // ETH on Base
+          ? "0x4200000000000000000000000000000000000006"
           : createFormData.assetType
         
         const tx = await createDCAPlan({
           tokenAddress,
         })
         console.log("[v0] DCA Plan created:", tx)
+        assetSymbol = createFormData.assetType === "ether" ? "ETH" : "TOKEN"
       }
+
+      // TODO: Extract plan ID from transaction logs and save to database
+      // For now, we'll need the user to enter the plan ID manually the first time
+      // In production, you'd parse the contract events to get the planId
 
       setCreateFormData({
         assetType: "",
       })
-      alert("DCA Plan created successfully!")
+      alert("DCA Plan created successfully! Refresh the Fund/Withdraw tabs to see your new plan.")
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to create DCA plan"
       setError(errorMessage)
@@ -218,19 +283,28 @@ export function DCA() {
             <CardContent className="p-8 md:p-12">
               <form onSubmit={handleFundPlan} className="space-y-8">
                 <div className="space-y-2">
-                  <Label htmlFor="fund-plan-id" className="text-base font-semibold text-foreground">
-                    Plan ID
+                  <Label htmlFor="fund-plan-select" className="text-base font-semibold text-foreground">
+                    Select Your Plan
                   </Label>
-                  <Input
-                    id="fund-plan-id"
-                    type="number"
-                    placeholder="Enter your plan ID"
-                    value={fundFormData.planId}
-                    onChange={(e) => setFundFormData({ ...fundFormData, planId: e.target.value })}
-                    className="h-14 text-base bg-background border-border focus:border-primary"
-                    required
-                  />
-                  <p className="text-sm text-muted-foreground">The unique ID of your DCA plan</p>
+                  {plansLoading ? (
+                    <div className="text-sm text-muted-foreground">Loading your plans...</div>
+                  ) : userPlans.length > 0 ? (
+                    <Select value={fundFormData.planId} onValueChange={(value) => setFundFormData({ ...fundFormData, planId: value })}>
+                      <SelectTrigger className="h-14 text-base bg-background border-border focus:border-primary">
+                        <SelectValue placeholder="Select a plan to fund" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userPlans.map((plan) => (
+                          <SelectItem key={plan.plan_id} value={plan.plan_id.toString()}>
+                            Plan {plan.plan_id} - {plan.asset_symbol} (Created: {new Date(plan.created_at).toLocaleDateString()})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No plans found. Create a plan first.</div>
+                  )}
+                  <p className="text-sm text-muted-foreground">Select a plan from your existing DCA plans</p>
                 </div>
 
                 <div className="space-y-2">
@@ -261,7 +335,7 @@ export function DCA() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isLoading}
+                  disabled={isLoading || !fundFormData.planId}
                   className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                 >
                   {isLoading ? "Funding Plan..." : "Fund DCA Plan"}
@@ -274,19 +348,28 @@ export function DCA() {
             <CardContent className="p-8 md:p-12">
               <form onSubmit={handleWithdraw} className="space-y-8">
                 <div className="space-y-2">
-                  <Label htmlFor="plan-id" className="text-base font-semibold text-foreground">
-                    Plan ID
+                  <Label htmlFor="withdraw-plan-select" className="text-base font-semibold text-foreground">
+                    Select Your Plan
                   </Label>
-                  <Input
-                    id="plan-id"
-                    type="number"
-                    placeholder="Enter your plan ID"
-                    value={withdrawData.planId}
-                    onChange={(e) => setWithdrawData({ ...withdrawData, planId: e.target.value })}
-                    className="h-14 text-base bg-background border-border focus:border-primary"
-                    required
-                  />
-                  <p className="text-sm text-muted-foreground">The unique ID of your DCA plan</p>
+                  {plansLoading ? (
+                    <div className="text-sm text-muted-foreground">Loading your plans...</div>
+                  ) : userPlans.length > 0 ? (
+                    <Select value={withdrawData.planId} onValueChange={(value) => setWithdrawData({ ...withdrawData, planId: value })}>
+                      <SelectTrigger className="h-14 text-base bg-background border-border focus:border-primary">
+                        <SelectValue placeholder="Select a plan to withdraw from" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {userPlans.map((plan) => (
+                          <SelectItem key={plan.plan_id} value={plan.plan_id.toString()}>
+                            Plan {plan.plan_id} - {plan.asset_symbol} (Funded: ${plan.funded_amount})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <div className="text-sm text-muted-foreground">No plans found. Create and fund a plan first.</div>
+                  )}
+                  <p className="text-sm text-muted-foreground">Select a plan to withdraw funds from</p>
                 </div>
 
                 <div className="space-y-2">
@@ -318,7 +401,7 @@ export function DCA() {
                 <Button
                   type="submit"
                   size="lg"
-                  disabled={isLoading}
+                  disabled={isLoading || !withdrawData.planId}
                   className="w-full h-16 text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all disabled:opacity-50"
                 >
                   {isLoading ? "Processing..." : "Withdraw Funds"}
