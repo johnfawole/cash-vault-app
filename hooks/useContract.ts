@@ -357,6 +357,12 @@ export function useContract() {
       );
 
       // Call createPlanWithUSDC on contract (no parameters needed, uses USDC set by owner)
+      console.log('[v0] Attempting createPlanWithUSDC transaction...');
+      
+      // Estimate gas to catch any issues early
+      const gasEstimate = await contract.createPlanWithUSDC.estimateGas();
+      console.log('[v0] Gas estimate:', gasEstimate.toString());
+      
       const tx = await contract.createPlanWithUSDC();
 
       // Wait for transaction confirmation
