@@ -360,8 +360,15 @@ export function useContract() {
       console.log('[v0] Attempting createPlanWithUSDC transaction...');
       
       // Estimate gas to catch any issues early
-      const gasEstimate = await contract.createPlanWithUSDC.estimateGas();
-      console.log('[v0] Gas estimate:', gasEstimate.toString());
+      try {
+        const gasEstimate = await contract.createPlanWithUSDC.estimateGas();
+        console.log('[v0] Gas estimate:', gasEstimate.toString());
+      } catch (estimateError: any) {
+        console.error('[v0] Gas estimation failed:', estimateError);
+        // Extract revert reason if available
+        const reason = estimateError?.reason || estimateError?.message || 'Transaction would fail';
+        throw new Error(`Transaction would fail. Check: Do you have USDC balance? Is USDC approved? Error: ${reason}`);
+      }
       
       const tx = await contract.createPlanWithUSDC();
 
