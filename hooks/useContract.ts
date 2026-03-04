@@ -271,7 +271,7 @@ export function useContract() {
     }
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      let provider = new ethers.BrowserProvider(window.ethereum);
       
       try {
         const signer = await provider.getSigner();
@@ -326,7 +326,7 @@ export function useContract() {
     }
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      let provider = new ethers.BrowserProvider(window.ethereum);
       
       try {
         const signer = await provider.getSigner();
