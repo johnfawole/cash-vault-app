@@ -1,6 +1,5 @@
 "use client"
 
-import { Card } from "@/components/ui/card"
 import Image from "next/image"
 
 interface AssetSelectorProps {
@@ -26,40 +25,33 @@ const ASSETS = [
 
 export function AssetSelector({ value, onChange, label }: AssetSelectorProps) {
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {label && <label className="text-sm font-medium text-foreground block">{label}</label>}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
+      <div className="flex gap-6 items-end justify-center">
         {ASSETS.map((asset) => {
           const isSelected = value === asset.id
           
           return (
-            <Card
-              key={asset.id}
-              onClick={() => onChange(asset.id)}
-              className={`p-4 cursor-pointer transition-all border-2 rounded-xl ${
-                isSelected
-                  ? "border-primary bg-primary/10 shadow-md"
-                  : "border-border hover:border-primary/50"
-              }`}
-            >
-              <div className="flex flex-col items-center gap-2">
-                <div className={`relative w-8 h-8 rounded-lg bg-secondary p-1.5 flex items-center justify-center ${
-                  isSelected ? "bg-primary/20" : ""
-                }`}>
-                  <Image
-                    src={asset.logo}
-                    alt={asset.name}
-                    width={24}
-                    height={24}
-                    className="object-contain"
-                  />
-                </div>
-                <div className="text-center">
-                  <p className="font-semibold text-sm text-foreground">{asset.name}</p>
-                  <p className="text-xs text-muted-foreground">{asset.description}</p>
-                </div>
+            <div key={asset.id} className="flex flex-col items-center gap-3">
+              <div
+                onClick={() => onChange(asset.id)}
+                className={`relative w-20 h-20 rounded-2xl cursor-pointer transition-all flex items-center justify-center bg-secondary hover:bg-secondary/80 ${
+                  isSelected ? "ring-3 ring-primary shadow-lg" : ""
+                }`}
+              >
+                <Image
+                  src={asset.logo}
+                  alt={asset.name}
+                  width={48}
+                  height={48}
+                  className="object-contain"
+                />
               </div>
-            </Card>
+              <div className="text-center">
+                <p className="font-semibold text-sm text-foreground">{asset.name}</p>
+                <p className="text-xs text-muted-foreground">{asset.description}</p>
+              </div>
+            </div>
           )
         })}
       </div>
