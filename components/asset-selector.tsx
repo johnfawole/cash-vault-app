@@ -27,7 +27,7 @@ export function AssetSelector({ value, onChange, label }: AssetSelectorProps) {
   return (
     <div className="space-y-4">
       {label && <label className="text-sm font-medium text-foreground block">{label}</label>}
-      <div className="flex gap-6 items-end justify-center">
+      <div className="flex gap-12 items-end justify-center">
         {ASSETS.map((asset) => {
           const isSelected = value === asset.id
           
