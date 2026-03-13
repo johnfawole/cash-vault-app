@@ -14,11 +14,21 @@ export interface WalletConnectionResult {
  * Mobile: Uses injected provider (works when user opens via wallet app or WalletConnect)
  */
 export async function connectWallet(): Promise<WalletConnectionResult> {
+  // Check if we're on mobile
+  const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+
   // Step 1: Check if MetaMask/Web3 wallet is available
   if (!window.ethereum) {
-    throw new Error(
-      'No Web3 wallet found. Please install MetaMask or open this site through a Web3-enabled wallet.'
-    )
+    if (isMobile) {
+      // On mobile without a wallet, provide installation options
+      throw new Error(
+        'No Web3 wallet detected on mobile. Install MetaMask or open this link through a Web3 wallet app.'
+      )
+    } else {
+      throw new Error(
+        'No Web3 wallet found. Please install MetaMask or another Web3-enabled wallet.'
+      )
+    }
   }
 
   try {
