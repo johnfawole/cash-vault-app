@@ -10,6 +10,9 @@ export function Header() {
 
   const handleConnectWallet = async () => {
     try {
+      // Check if on mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      
       if (typeof window !== "undefined" && window.ethereum) {
         const accounts = await window.ethereum.request({
           method: "eth_requestAccounts"
@@ -18,6 +21,10 @@ export function Header() {
           setIsWalletConnected(true)
           console.log("[v0] Wallet connected:", accounts[0])
         }
+      } else if (isMobile) {
+        // On mobile, redirect to MetaMask app with deep link
+        const deepLink = `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`
+        window.location.href = deepLink
       } else {
         alert("MetaMask or compatible wallet not found. Please install it.")
       }

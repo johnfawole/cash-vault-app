@@ -57,9 +57,19 @@ export function DCA() {
   const handleConnectWallet = async () => {
     setIsConnecting(true)
     try {
+      // Check if on mobile
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      
       if (!window.ethereum) {
+        if (isMobile) {
+          // On mobile, redirect to MetaMask app with deep link
+          const deepLink = `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`
+          window.location.href = deepLink
+          return
+        }
         throw new Error("MetaMask or compatible wallet not found. Please install MetaMask.")
       }
+      
       const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
       if (accounts && accounts.length > 0) {
         setUserId(accounts[0].toLowerCase())
