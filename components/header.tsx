@@ -14,10 +14,18 @@ export function Header() {
   useEffect(() => {
     const checkWalletConnection = async () => {
       const address = await getConnectedAddress()
+      console.log("[v0] Wallet check result:", address)
       setIsWalletConnected(!!address)
     }
 
     checkWalletConnection()
+
+    // Listen for account changes BEFORE checking
+    const unsubscribe = onAccountsChanged((accounts) => {
+      console.log("[v0] Accounts changed event:", accounts)
+      // Only show as connected if user has explicitly connected (not just injected provider returning empty array)
+      setIsWalletConnected(accounts.length > 0)
+    })
 
     // Recheck when page regains focus
     const handleVisibilityChange = () => {
@@ -25,11 +33,6 @@ export function Header() {
         checkWalletConnection()
       }
     }
-
-    // Listen for account changes
-    const unsubscribe = onAccountsChanged((accounts) => {
-      setIsWalletConnected(accounts.length > 0)
-    })
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
     window.addEventListener("focus", checkWalletConnection)

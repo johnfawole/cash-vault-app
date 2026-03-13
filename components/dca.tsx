@@ -74,6 +74,7 @@ export function DCA() {
   useEffect(() => {
     const checkWalletConnection = async () => {
       const address = await getConnectedAddress()
+      console.log("[v0] DCA wallet check result:", address)
       if (address) {
         setUserId(address)
       }
@@ -83,6 +84,7 @@ export function DCA() {
 
     // Listen for account changes
     const unsubscribe = onAccountsChanged((accounts) => {
+      console.log("[v0] DCA accounts changed event:", accounts)
       if (accounts.length > 0) {
         setUserId(accounts[0].toLowerCase())
       } else {
