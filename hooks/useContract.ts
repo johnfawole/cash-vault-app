@@ -70,7 +70,7 @@ export function useContract() {
               {
                 chainId: '0x' + BASE_CHAIN_ID.toString(16),
                 chainName: 'Base',
-                rpcUrls: ['https://mainnet.base.org'],
+                rpcUrls: ['https://mainnet.base.org', 'https://base.publicrpc.com'],
                 nativeCurrency: {
                   name: 'Ether',
                   symbol: 'ETH',
@@ -271,7 +271,7 @@ export function useContract() {
     }
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      let provider = new ethers.BrowserProvider(window.ethereum);
       
       try {
         const signer = await provider.getSigner();
@@ -280,14 +280,20 @@ export function useContract() {
         throw new Error('Please connect your wallet first. Click the "Connect Wallet" button in the header.');
       }
 
-      const signer = await provider.getSigner();
-
       // Check if user is on Base chain
-      const network = await provider.getNetwork();
+      let network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
         console.log('[v0] User not on Base network, attempting to switch...');
         await switchToBase();
+        
+        // Wait a moment for the network switch to complete, then create a fresh provider
+        await new Promise(resolve => setTimeout(resolve, 500));
+        provider = new ethers.BrowserProvider(window.ethereum);
+        network = await provider.getNetwork();
+        console.log('[v0] Network verified after switch:', network.chainId);
       }
+
+      const signer = await provider.getSigner();
 
       const contract = new ethers.Contract(
         DCA_INVESTMENT_ADDRESS,
@@ -312,7 +318,7 @@ export function useContract() {
       console.error('[v0] Error in createDCAPlan:', error);
       throw error;
     }
-  }, []);
+  }, [switchToBase]);
 
   const createDCAPlantWithUSDC = useCallback(async (params: CreateDCAPlantWithUSDCParams) => {
     if (!window.ethereum) {
@@ -320,7 +326,7 @@ export function useContract() {
     }
 
     try {
-      const provider = new ethers.BrowserProvider(window.ethereum);
+      let provider = new ethers.BrowserProvider(window.ethereum);
       
       try {
         const signer = await provider.getSigner();
@@ -329,14 +335,20 @@ export function useContract() {
         throw new Error('Please connect your wallet first. Click the "Connect Wallet" button in the header.');
       }
 
-      const signer = await provider.getSigner();
-
       // Check if user is on Base chain
-      const network = await provider.getNetwork();
+      let network = await provider.getNetwork();
       if (network.chainId !== BASE_CHAIN_ID) {
         console.log('[v0] User not on Base network, attempting to switch...');
         await switchToBase();
+        
+        // Wait a moment for the network switch to complete, then create a fresh provider
+        await new Promise(resolve => setTimeout(resolve, 500));
+        provider = new ethers.BrowserProvider(window.ethereum);
+        network = await provider.getNetwork();
+        console.log('[v0] Network verified after switch:', network.chainId);
       }
+
+      const signer = await provider.getSigner();
 
       const contract = new ethers.Contract(
         DCA_INVESTMENT_ADDRESS,
@@ -345,6 +357,19 @@ export function useContract() {
       );
 
       // Call createPlanWithUSDC on contract (no parameters needed, uses USDC set by owner)
+      console.log('[v0] Attempting createPlanWithUSDC transaction...');
+      
+      // Estimate gas to catch any issues early
+      try {
+        const gasEstimate = await contract.createPlanWithUSDC.estimateGas();
+        console.log('[v0] Gas estimate:', gasEstimate.toString());
+      } catch (estimateError: any) {
+        console.error('[v0] Gas estimation failed:', estimateError);
+        // Extract revert reason if available
+        const reason = estimateError?.reason || estimateError?.message || 'Transaction would fail';
+        throw new Error(`Transaction would fail. Check: Do you have USDC balance? Is USDC approved? Error: ${reason}`);
+      }
+      
       const tx = await contract.createPlanWithUSDC();
 
       // Wait for transaction confirmation
@@ -361,7 +386,7 @@ export function useContract() {
       console.error('[v0] Error in createDCAPlantWithUSDC:', error);
       throw error;
     }
-  }, []);
+  }, [switchToBase]);
 
   const fundDCAPlan = useCallback(async (params: FundDCAPlantParams) => {
     if (!window.ethereum) {
