@@ -60,7 +60,17 @@ export function Header() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
       console.error("[v0] Wallet connection error:", errorMessage)
-      alert(errorMessage)
+      
+      // Don't show alert if redirecting to MetaMask on mobile
+      if (errorMessage.includes("Redirecting")) {
+        console.log("[v0] Redirecting to MetaMask, hiding error")
+        return
+      }
+      
+      // Show error for desktop or if wallet not available
+      if (!errorMessage.includes("Redirecting")) {
+        alert(errorMessage)
+      }
     } finally {
       setIsConnecting(false)
     }

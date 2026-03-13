@@ -63,8 +63,12 @@ export function DCA() {
       setError(null)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
-      setError(errorMessage)
       console.error("[v0] Error connecting wallet:", err)
+      
+      // Don't show error if redirecting to MetaMask on mobile
+      if (!errorMessage.includes("Redirecting")) {
+        setError(errorMessage)
+      }
     } finally {
       setIsConnecting(false)
     }
