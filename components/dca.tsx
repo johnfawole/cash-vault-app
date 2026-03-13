@@ -13,6 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AssetSelector } from "@/components/asset-selector"
 import { TrendingUp, ArrowLeft, DollarSign, Mail, Bell, Wallet } from "lucide-react"
 import Link from "next/link"
+import { connectWallet, getConnectedAddress, onAccountsChanged } from "@/lib/walletConnector"
 
 interface DCAPlanlData {
   id: number
