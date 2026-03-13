@@ -57,24 +57,9 @@ export function DCA() {
   const handleConnectWallet = async () => {
     setIsConnecting(true)
     try {
-      // Check if on mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      
-      if (!window.ethereum) {
-        if (isMobile) {
-          // On mobile, redirect to MetaMask app with deep link
-          const deepLink = `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`
-          window.location.href = deepLink
-          return
-        }
-        throw new Error("MetaMask or compatible wallet not found. Please install MetaMask.")
-      }
-      
-      const accounts = await window.ethereum.request({ method: "eth_requestAccounts" })
-      if (accounts && accounts.length > 0) {
-        setUserId(accounts[0].toLowerCase())
-        setError(null)
-      }
+      const result = await connectWallet()
+      setUserId(result.address)
+      setError(null)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
       setError(errorMessage)
@@ -86,34 +71,38 @@ export function DCA() {
 
   // Get user ID from wallet
   useEffect(() => {
-    const getConnectedAddress = async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: "eth_accounts" })
-          if (accounts && accounts.length > 0) {
-            setUserId(accounts[0].toLowerCase())
-          }
-        } catch (err) {
-          console.error("[v0] Error getting wallet address:", err)
-        }
+    const checkWalletConnection = async () => {
+      const address = await getConnectedAddress()
+      if (address) {
+        setUserId(address)
       }
     }
 
-    getConnectedAddress()
+    checkWalletConnection()
 
-    // Also check when page regains focus (user returns from MetaMask redirect)
+    // Listen for account changes
+    const unsubscribe = onAccountsChanged((accounts) => {
+      if (accounts.length > 0) {
+        setUserId(accounts[0].toLowerCase())
+      } else {
+        setUserId(null)
+      }
+    })
+
+    // Recheck when page regains focus
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
-        getConnectedAddress()
+        checkWalletConnection()
       }
     }
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
-    window.addEventListener("focus", getConnectedAddress)
+    window.addEventListener("focus", checkWalletConnection)
 
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange)
-      window.removeEventListener("focus", getConnectedAddress)
+      window.removeEventListener("focus", checkWalletConnection)
+      unsubscribe()
     }
   }, [])
 
