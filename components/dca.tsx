@@ -72,11 +72,17 @@ export function DCA() {
 
   // Get user ID from wallet
   useEffect(() => {
+    let isMounted = true
+    
     const checkWalletConnection = async () => {
       const address = await getConnectedAddress()
       console.log("[v0] DCA wallet check result:", address)
-      if (address) {
-        setUserId(address)
+      if (isMounted) {
+        if (address) {
+          setUserId(address)
+        } else {
+          setUserId(null)
+        }
       }
     }
 
@@ -85,10 +91,12 @@ export function DCA() {
     // Listen for account changes
     const unsubscribe = onAccountsChanged((accounts) => {
       console.log("[v0] DCA accounts changed event:", accounts)
-      if (accounts.length > 0) {
-        setUserId(accounts[0].toLowerCase())
-      } else {
-        setUserId(null)
+      if (isMounted) {
+        if (Array.isArray(accounts) && accounts.length > 0) {
+          setUserId(accounts[0].toLowerCase())
+        } else {
+          setUserId(null)
+        }
       }
     })
 
@@ -103,6 +111,7 @@ export function DCA() {
     window.addEventListener("focus", checkWalletConnection)
 
     return () => {
+      isMounted = false
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("focus", checkWalletConnection)
       unsubscribe()

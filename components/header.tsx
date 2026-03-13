@@ -12,19 +12,26 @@ export function Header() {
 
   // Check wallet connection on mount and when page regains focus
   useEffect(() => {
+    let isMounted = true
+    
     const checkWalletConnection = async () => {
       const address = await getConnectedAddress()
       console.log("[v0] Wallet check result:", address)
-      setIsWalletConnected(!!address)
+      if (isMounted) {
+        setIsWalletConnected(!!address)
+      }
     }
 
     checkWalletConnection()
 
-    // Listen for account changes BEFORE checking
+    // Listen for account changes
     const unsubscribe = onAccountsChanged((accounts) => {
       console.log("[v0] Accounts changed event:", accounts)
-      // Only show as connected if user has explicitly connected (not just injected provider returning empty array)
-      setIsWalletConnected(accounts.length > 0)
+      if (isMounted) {
+        // Only show as connected if accounts array has items AND they're valid
+        const isConnected = Array.isArray(accounts) && accounts.length > 0
+        setIsWalletConnected(isConnected)
+      }
     })
 
     // Recheck when page regains focus
@@ -38,6 +45,7 @@ export function Header() {
     window.addEventListener("focus", checkWalletConnection)
 
     return () => {
+      isMounted = false
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("focus", checkWalletConnection)
       unsubscribe()
