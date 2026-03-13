@@ -100,6 +100,21 @@ export function DCA() {
     }
 
     getConnectedAddress()
+
+    // Also check when page regains focus (user returns from MetaMask redirect)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        getConnectedAddress()
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    window.addEventListener("focus", getConnectedAddress)
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.removeEventListener("focus", getConnectedAddress)
+    }
   }, [])
 
   // Fetch user's plans when user ID or tab changes

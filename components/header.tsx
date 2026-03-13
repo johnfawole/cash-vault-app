@@ -1,12 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Lock, Wallet } from 'lucide-react'
 import Link from "next/link"
 
 export function Header() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
+
+  // Check wallet connection on mount and when page regains focus
+  useEffect(() => {
+    const checkWalletConnection = async () => {
+      if (typeof window !== "undefined" && window.ethereum) {
+        try {
+          const accounts = await window.ethereum.request({ method: "eth_accounts" })
+          if (accounts && accounts.length > 0) {
+            setIsWalletConnected(true)
+          }
+        } catch (err) {
+          console.error("[v0] Error checking wallet:", err)
+        }
+      }
+    }
+
+    checkWalletConnection()
+
+    // Recheck when page regains focus (user returns from MetaMask redirect)
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        checkWalletConnection()
+      }
+    }
+
+    document.addEventListener("visibilitychange", handleVisibilityChange)
+    window.addEventListener("focus", checkWalletConnection)
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange)
+      window.removeEventListener("focus", checkWalletConnection)
+    }
+  }, [])
 
   const handleConnectWallet = async () => {
     try {
