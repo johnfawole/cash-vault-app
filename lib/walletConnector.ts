@@ -7,11 +7,11 @@ export interface WalletConnectionResult {
 }
 
 /**
- * Modern wallet connection that works across desktop and mobile browsers
- * without requiring redirects or in-app browsers.
+ * Modern wallet connection that works across desktop and mobile browsers.
  * 
  * Desktop: Uses injected MetaMask provider
- * Mobile: Uses injected provider (works when user opens via wallet app or WalletConnect)
+ * Mobile: On first call without wallet, redirects to MetaMask app, then back to cashvault
+ *         Second call after redirect will work with injected provider
  */
 export async function connectWallet(): Promise<WalletConnectionResult> {
   // Check if we're on mobile
@@ -20,10 +20,15 @@ export async function connectWallet(): Promise<WalletConnectionResult> {
   // Step 1: Check if MetaMask/Web3 wallet is available
   if (!window.ethereum) {
     if (isMobile) {
-      // On mobile without a wallet, provide installation options
-      throw new Error(
-        'No Web3 wallet detected on mobile. Install MetaMask or open this link through a Web3 wallet app.'
-      )
+      // On mobile, redirect to MetaMask app with deep link
+      // MetaMask will open the URL in its in-app browser
+      const currentUrl = window.location.href
+      const deepLink = `https://metamask.app.link/dapp/${currentUrl.replace(/^https?:\/\//, '')}`
+      console.log('[v0] Redirecting to MetaMask deep link:', deepLink)
+      window.location.href = deepLink
+      
+      // This throw won't be reached, but keeps TypeScript happy
+      throw new Error('Redirecting to MetaMask...')
     } else {
       throw new Error(
         'No Web3 wallet found. Please install MetaMask or another Web3-enabled wallet.'

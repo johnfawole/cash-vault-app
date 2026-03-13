@@ -61,23 +61,14 @@ export function Header() {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
       console.error("[v0] Wallet connection error:", errorMessage)
       
-      // Better error messaging for mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+      // Don't show alert if redirecting to MetaMask on mobile
+      if (errorMessage.includes("Redirecting")) {
+        console.log("[v0] Redirecting to MetaMask, hiding error")
+        return
+      }
       
-      if (errorMessage.includes("No Web3 wallet")) {
-        if (isMobile) {
-          alert(
-            "📱 To connect your wallet on mobile:\n\n" +
-            "Option 1: Install MetaMask\n" +
-            "• Download MetaMask from your app store\n" +
-            "• Open this link through MetaMask's browser\n\n" +
-            "Option 2: Use any Web3 wallet\n" +
-            "• Open this link through your wallet's in-app browser (Phantom, Coinbase, etc.)"
-          )
-        } else {
-          alert("Please install MetaMask or another Web3 wallet browser extension.")
-        }
-      } else {
+      // Show error for desktop or if wallet not available
+      if (!errorMessage.includes("Redirecting")) {
         alert(errorMessage)
       }
     } finally {

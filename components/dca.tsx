@@ -63,20 +63,11 @@ export function DCA() {
       setError(null)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
-      setError(errorMessage)
       console.error("[v0] Error connecting wallet:", err)
       
-      // Better error messaging for mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      
-      if (errorMessage.includes("No Web3 wallet")) {
-        if (isMobile) {
-          setError(
-            "📱 To connect on mobile: Install MetaMask and open this link through the MetaMask browser, or use any Web3 wallet app"
-          )
-        } else {
-          setError("Please install MetaMask or another Web3 wallet.")
-        }
+      // Don't show error if redirecting to MetaMask on mobile
+      if (!errorMessage.includes("Redirecting")) {
+        setError(errorMessage)
       }
     } finally {
       setIsConnecting(false)
