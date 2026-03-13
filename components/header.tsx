@@ -4,33 +4,32 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Lock, Wallet } from 'lucide-react'
 import Link from "next/link"
+import { getConnectedAddress, connectWallet, onAccountsChanged } from "@/lib/walletConnector"
 
 export function Header() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false)
 
   // Check wallet connection on mount and when page regains focus
   useEffect(() => {
     const checkWalletConnection = async () => {
-      if (typeof window !== "undefined" && window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({ method: "eth_accounts" })
-          if (accounts && accounts.length > 0) {
-            setIsWalletConnected(true)
-          }
-        } catch (err) {
-          console.error("[v0] Error checking wallet:", err)
-        }
-      }
+      const address = await getConnectedAddress()
+      setIsWalletConnected(!!address)
     }
 
     checkWalletConnection()
 
-    // Recheck when page regains focus (user returns from MetaMask redirect)
+    // Recheck when page regains focus
     const handleVisibilityChange = () => {
       if (document.visibilityState === "visible") {
         checkWalletConnection()
       }
     }
+
+    // Listen for account changes
+    const unsubscribe = onAccountsChanged((accounts) => {
+      setIsWalletConnected(accounts.length > 0)
+    })
 
     document.addEventListener("visibilitychange", handleVisibilityChange)
     window.addEventListener("focus", checkWalletConnection)
@@ -38,31 +37,21 @@ export function Header() {
     return () => {
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("focus", checkWalletConnection)
+      unsubscribe()
     }
   }, [])
 
   const handleConnectWallet = async () => {
+    setIsConnecting(true)
     try {
-      // Check if on mobile
-      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
-      
-      if (typeof window !== "undefined" && window.ethereum) {
-        const accounts = await window.ethereum.request({
-          method: "eth_requestAccounts"
-        })
-        if (accounts.length > 0) {
-          setIsWalletConnected(true)
-          console.log("[v0] Wallet connected:", accounts[0])
-        }
-      } else if (isMobile) {
-        // On mobile, redirect to MetaMask app with deep link
-        const deepLink = `https://metamask.app.link/dapp/${window.location.hostname}${window.location.pathname}`
-        window.location.href = deepLink
-      } else {
-        alert("MetaMask or compatible wallet not found. Please install it.")
-      }
+      await connectWallet()
+      setIsWalletConnected(true)
     } catch (err) {
-      console.error("[v0] Error connecting wallet:", err)
+      const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
+      console.error("[v0] Wallet connection error:", errorMessage)
+      alert(errorMessage)
+    } finally {
+      setIsConnecting(false)
     }
   }
 
@@ -101,6 +90,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             <Button
               onClick={handleConnectWallet}
+              disabled={isConnecting}
               className={`text-sm font-semibold inline-flex items-center gap-2 ${
                 isWalletConnected
                   ? "bg-primary/20 text-primary hover:bg-primary/30"
@@ -109,7 +99,7 @@ export function Header() {
               size="sm"
             >
               <Wallet className="w-4 h-4" />
-              {isWalletConnected ? "Connected" : "Connect Wallet"}
+              {isConnecting ? "Connecting..." : isWalletConnected ? "Connected" : "Connect Wallet"}
             </Button>
             <Link href="/waitlist">
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold hidden sm:inline-flex">
