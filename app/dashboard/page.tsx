@@ -7,35 +7,63 @@ import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { DCAPlansCard } from '@/components/dashboard/dca-plans-card'
 import { HoldingsPieChart } from '@/components/dashboard/holdings-pie-chart'
+import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
+  const router = useRouter()
   const [user, setUser] = useState<any>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   useEffect(() => {
-    const getUser = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-      setIsLoading(false)
+    const checkAuth = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession()
+
+        if (!session) {
+          router.push('/dashboard/login')
+          return
+        }
+
+        setUser(session.user)
+      } catch (error) {
+        console.error('[v0] Auth check error:', error)
+        router.push('/dashboard/login')
+      } finally {
+        setIsLoading(false)
+      }
     }
 
-    getUser()
-  }, [])
+    checkAuth()
+  }, [router])
 
   const handleLogout = async () => {
-    await supabase.auth.signOut()
-    window.location.href = '/'
+    try {
+      await supabase.auth.signOut()
+      router.push('/')
+    } catch (error) {
+      console.error('[v0] Logout error:', error)
+    }
   }
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-background">
         <div className="text-center">
           <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-4">Redirecting...</p>
         </div>
       </div>
     )
