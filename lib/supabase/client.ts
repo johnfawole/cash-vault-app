@@ -1,24 +1,31 @@
 import { createBrowserClient } from '@supabase/ssr'
 
-export function createClient() {
-  return createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
-        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
-      },
-    }
-  )
-}
+let supabaseInstance: ReturnType<typeof createBrowserClient> | null = null
 
-// Create instance only in browser
 export function getSupabase() {
+  // Only create client in browser environment
   if (typeof window === 'undefined') {
     return null
   }
-  return createClient()
+
+  // Return cached instance if available
+  if (supabaseInstance) {
+    return supabaseInstance
+  }
+
+  try {
+    // Create new instance
+    supabaseInstance = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
+    )
+    return supabaseInstance
+  } catch (error) {
+    console.error('[v0] Failed to create Supabase client:', error)
+    return null
+  }
+}
+
+export function createClient() {
+  return getSupabase()
 }

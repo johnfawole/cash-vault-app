@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { getSupabase } from '@/lib/supabase/client'
 
 export default function DashboardLogin() {
   const [isLoading, setIsLoading] = useState(false)
@@ -15,10 +14,30 @@ export default function DashboardLogin() {
     setError(null)
 
     try {
+      const { getSupabase } = await import('@/lib/supabase/client')
       const supabase = getSupabase()
       if (!supabase) {
         throw new Error('Database connection unavailable')
       }
+
+      const { error: authError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      })
+
+      if (authError) {
+        throw authError
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in'
+      setError(errorMessage)
+      console.error('[v0] Google login error:', err)
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',

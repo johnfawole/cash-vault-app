@@ -1,12 +1,9 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { getSupabase } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
 import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
-import { DCAPlansCard } from '@/components/dashboard/dca-plans-card'
-import { HoldingsPieChart } from '@/components/dashboard/holdings-pie-chart'
 import { useRouter } from 'next/navigation'
 
 export default function DashboardPage() {
@@ -18,8 +15,12 @@ export default function DashboardPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        // Dynamically import to avoid module-load-time issues
+        const { getSupabase } = await import('@/lib/supabase/client')
         const supabase = getSupabase()
+        
         if (!supabase) {
+          console.log('[v0] No supabase client, redirecting to login')
           router.push('/dashboard/login')
           return
         }
@@ -29,10 +30,12 @@ export default function DashboardPage() {
         } = await supabase.auth.getSession()
 
         if (!session) {
+          console.log('[v0] No session, redirecting to login')
           router.push('/dashboard/login')
           return
         }
 
+        console.log('[v0] User session found:', session.user.email)
         setUser(session.user)
       } catch (error) {
         console.error('[v0] Auth check error:', error)
@@ -47,6 +50,7 @@ export default function DashboardPage() {
 
   const handleLogout = async () => {
     try {
+      const { getSupabase } = await import('@/lib/supabase/client')
       const supabase = getSupabase()
       if (supabase) {
         await supabase.auth.signOut()
@@ -154,16 +158,15 @@ export default function DashboardPage() {
               </p>
             </div>
 
-            {/* Dashboard Grid */}
+            {/* Dashboard Grid - Coming Soon */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - DCA Plans */}
-              <div className="lg:col-span-2">
-                <DCAPlansCard userId={user?.id} />
+              <div className="lg:col-span-2 bg-card rounded-lg p-8 border border-border">
+                <h2 className="text-xl font-semibold mb-4">DCA Savings Plans</h2>
+                <p className="text-muted-foreground">Loading...</p>
               </div>
-
-              {/* Right Column - Holdings Chart */}
-              <div className="lg:col-span-1">
-                <HoldingsPieChart userId={user?.id} />
+              <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border">
+                <h2 className="text-xl font-semibold mb-4">Holdings</h2>
+                <p className="text-muted-foreground">Loading...</p>
               </div>
             </div>
           </div>
