@@ -1,85 +1,54 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut, Menu } from 'lucide-react'
+import { LogOut, TrendingUp, DollarSign } from 'lucide-react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { useState } from 'react'
+
+// Mock data for demo
+const mockDCAPlans = [
+  {
+    id: '1',
+    name: 'Bitcoin Investment',
+    asset: 'BTC',
+    frequency: 'Weekly',
+    amount: 100,
+    nextPayment: '2026-03-20',
+  },
+  {
+    id: '2',
+    name: 'Ethereum Savings',
+    asset: 'ETH',
+    frequency: 'Monthly',
+    amount: 500,
+    nextPayment: '2026-04-01',
+  },
+  {
+    id: '3',
+    name: 'Stablecoin Pool',
+    asset: 'USDC',
+    frequency: 'Weekly',
+    amount: 250,
+    nextPayment: '2026-03-18',
+  },
+]
+
+const mockHoldings = [
+  { name: 'BTC', value: 2500, percentage: 45 },
+  { name: 'ETH', value: 1800, percentage: 32 },
+  { name: 'USDC', value: 1200, percentage: 23 },
+]
+
+const COLORS = ['#c4fa6b', '#6fa6ff', '#ff6b9d']
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<any>(null)
-  const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        // Dynamically import to avoid module-load-time issues
-        const { getSupabase } = await import('@/lib/supabase/client')
-        const supabase = getSupabase()
-        
-        if (!supabase) {
-          console.log('[v0] No supabase client, redirecting to login')
-          router.push('/dashboard/login')
-          return
-        }
-
-        const {
-          data: { session },
-        } = await supabase.auth.getSession()
-
-        if (!session) {
-          console.log('[v0] No session, redirecting to login')
-          router.push('/dashboard/login')
-          return
-        }
-
-        console.log('[v0] User session found:', session.user.email)
-        setUser(session.user)
-      } catch (error) {
-        console.error('[v0] Auth check error:', error)
-        router.push('/dashboard/login')
-      } finally {
-        setIsLoading(false)
-      }
-    }
-
-    checkAuth()
-  }, [router])
-
-  const handleLogout = async () => {
-    try {
-      const { getSupabase } = await import('@/lib/supabase/client')
-      const supabase = getSupabase()
-      if (supabase) {
-        await supabase.auth.signOut()
-      }
-      router.push('/')
-    } catch (error) {
-      console.error('[v0] Logout error:', error)
-    }
-  }
-
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading dashboard...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-background">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-4">Redirecting...</p>
-        </div>
-      </div>
-    )
+  const handleLogout = () => {
+    // Simple logout - would connect to auth in production
+    window.location.href = '/'
   }
 
   return (
@@ -101,12 +70,6 @@ export default function DashboardPage() {
             >
               Dashboard
             </Link>
-            <Link
-              href="/dashboard/settings"
-              className="block px-4 py-2 rounded-lg text-muted-foreground hover:bg-muted transition-colors"
-            >
-              Settings
-            </Link>
           </nav>
 
           <div className="mt-8 pt-6 border-t border-border">
@@ -125,22 +88,16 @@ export default function DashboardPage() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
-        <header className="bg-card border-b border-border px-4 md:px-8 py-4 flex items-center justify-between md:justify-end">
+        <header className="bg-card border-b border-border px-4 md:px-8 py-4 flex items-center justify-between">
           <button
             className="md:hidden"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
-            <Menu className="w-6 h-6" />
+            <span className="text-2xl">☰</span>
           </button>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              {user?.email}
-            </span>
-            <Button
-              onClick={handleLogout}
-              variant="ghost"
-              size="sm"
-            >
+            <span className="text-sm text-muted-foreground">user@example.com</span>
+            <Button onClick={handleLogout} variant="ghost" size="sm">
               <LogOut className="w-4 h-4" />
             </Button>
           </div>
@@ -150,23 +107,87 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold text-foreground mb-2">
-                Welcome back!
-              </h1>
-              <p className="text-muted-foreground">
-                Track your savings plans and investment holdings
-              </p>
+              <h1 className="text-4xl font-bold text-foreground mb-2">Welcome to Your Dashboard</h1>
+              <p className="text-muted-foreground">Track your DCA savings plans and investment holdings</p>
             </div>
 
-            {/* Dashboard Grid - Coming Soon */}
+            {/* Dashboard Grid */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div className="lg:col-span-2 bg-card rounded-lg p-8 border border-border">
-                <h2 className="text-xl font-semibold mb-4">DCA Savings Plans</h2>
-                <p className="text-muted-foreground">Loading...</p>
+              {/* Left Column - DCA Plans */}
+              <div className="lg:col-span-2">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Active DCA Plans</CardTitle>
+                    <CardDescription>Your dollar-cost averaging investment plans</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {mockDCAPlans.map((plan) => (
+                        <div key={plan.id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                          <div className="flex items-start justify-between mb-3">
+                            <div>
+                              <h3 className="font-semibold text-foreground">{plan.name}</h3>
+                              <p className="text-sm text-muted-foreground">{plan.asset}</p>
+                            </div>
+                            <div className="text-right">
+                              <p className="font-bold text-foreground">${plan.amount}</p>
+                              <p className="text-xs text-muted-foreground">{plan.frequency}</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="text-muted-foreground">Next payment:</span>
+                            <span className="font-medium">{plan.nextPayment}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
-              <div className="lg:col-span-1 bg-card rounded-lg p-8 border border-border">
-                <h2 className="text-xl font-semibold mb-4">Holdings</h2>
-                <p className="text-muted-foreground">Loading...</p>
+
+              {/* Right Column - Holdings Chart */}
+              <div className="lg:col-span-1">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Holdings Distribution</CardTitle>
+                    <CardDescription>Your asset allocation</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <ResponsiveContainer width="100%" height={300}>
+                      <PieChart>
+                        <Pie
+                          data={mockHoldings}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={false}
+                          label={({ name, percentage }) => `${name} ${percentage}%`}
+                          outerRadius={80}
+                          fill="#8884d8"
+                          dataKey="value"
+                        >
+                          {mockHoldings.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                          ))}
+                        </Pie>
+                        <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
+                        <Legend />
+                      </PieChart>
+                    </ResponsiveContainer>
+
+                    {/* Holdings Summary */}
+                    <div className="space-y-3 mt-6">
+                      {mockHoldings.map((holding, idx) => (
+                        <div key={idx} className="flex items-center justify-between text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx] }}></div>
+                            <span className="text-muted-foreground">{holding.name}</span>
+                          </div>
+                          <span className="font-medium">${holding.value.toLocaleString()}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             </div>
           </div>
