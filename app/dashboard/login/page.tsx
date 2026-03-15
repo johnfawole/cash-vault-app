@@ -39,25 +39,6 @@ export default function DashboardLogin() {
     }
   }
 
-      const { error: authError } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`,
-        },
-      })
-
-      if (authError) {
-        throw authError
-      }
-    } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in'
-      setError(errorMessage)
-      console.error('[v0] Google login error:', err)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
