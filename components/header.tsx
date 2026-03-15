@@ -109,6 +109,11 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <Link href="/dashboard">
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold hidden sm:inline-flex">
+                Dashboard
+              </Button>
+            </Link>
             <Button
               onClick={handleConnectWallet}
               disabled={isConnecting}
