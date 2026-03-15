@@ -127,11 +127,6 @@ export function Header() {
               <Wallet className="w-4 h-4" />
               {isConnecting ? "Connecting..." : isWalletConnected ? "Connected" : "Connect Wallet"}
             </Button>
-            <Link href="/waitlist">
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold hidden sm:inline-flex">
-                Join Waitlist
-              </Button>
-            </Link>
           </div>
         </div>
       </div>
