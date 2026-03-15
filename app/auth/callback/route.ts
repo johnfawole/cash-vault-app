@@ -1,20 +1,24 @@
-import { createClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
 export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
+  const error = requestUrl.searchParams.get('error')
+
+  // Handle OAuth errors from provider
+  if (error) {
+    console.error('[v0] OAuth error from provider:', error)
+    return NextResponse.redirect(`${requestUrl.origin}/dashboard/login?error=${error}`)
+  }
 
   if (code) {
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
+    const supabase = await createClient()
 
     try {
-      const { error } = await supabase.auth.exchangeCodeForSession(code)
-      if (error) {
-        console.error('[v0] Auth callback error:', error)
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(code)
+      if (exchangeError) {
+        console.error('[v0] Auth callback error:', exchangeError)
         return NextResponse.redirect(`${requestUrl.origin}/dashboard/login?error=auth_error`)
       }
 

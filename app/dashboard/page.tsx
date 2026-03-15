@@ -1,11 +1,13 @@
 'use client'
 
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut, TrendingUp, DollarSign } from 'lucide-react'
+import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
-import { useState } from 'react'
+import { getUser, signOut } from '@/app/actions/auth'
 
 // Mock data for demo
 const mockDCAPlans = [
@@ -44,11 +46,52 @@ const mockHoldings = [
 const COLORS = ['#c4fa6b', '#6fa6ff', '#ff6b9d']
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const [user, setUser] = useState<any>(null)
+  const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  const handleLogout = () => {
-    // Simple logout - would connect to auth in production
-    window.location.href = '/'
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const currentUser = await getUser()
+        if (!currentUser) {
+          router.push('/dashboard/login')
+          return
+        }
+        setUser(currentUser)
+      } catch (error) {
+        console.error('[v0] Auth check error:', error)
+        router.push('/dashboard/login')
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    checkAuth()
+  }, [router])
+
+  const handleLogout = async () => {
+    try {
+      await signOut()
+    } catch (error) {
+      console.error('[v0] Logout error:', error)
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading dashboard...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return null
   }
 
   return (
@@ -93,10 +136,10 @@ export default function DashboardPage() {
             className="md:hidden"
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
-            <span className="text-2xl">☰</span>
+            <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">user@example.com</span>
+            <span className="text-sm text-muted-foreground">{user?.email}</span>
             <Button onClick={handleLogout} variant="ghost" size="sm">
               <LogOut className="w-4 h-4" />
             </Button>

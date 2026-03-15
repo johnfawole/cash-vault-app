@@ -1,38 +1,61 @@
 'use client'
 
+import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { ArrowLeft } from 'lucide-react'
+import { signInWithGoogle } from '@/app/actions/auth'
 
 export default function LoginPage() {
-  const handleGoogleLogin = () => {
-    // For now, just go to dashboard
-    // In production, this would integrate with Google OAuth via Supabase
-    window.location.href = '/dashboard'
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const handleGoogleLogin = async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      await signInWithGoogle()
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to sign in with Google'
+      setError(errorMsg)
+      setIsLoading(false)
+    }
   }
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <h1 className="text-4xl font-bold text-foreground mb-2">CashVault</h1>
-          <p className="text-muted-foreground">Track your savings and investments</p>
+          <Link href="/" className="inline-flex items-center justify-center gap-2 mb-4">
+            <div className="bg-[#c4fa6b] p-2 rounded-lg">
+              <span className="text-[#0a1628] font-bold text-lg">CV</span>
+            </div>
+            <span className="font-bold text-2xl text-foreground">CashVault</span>
+          </Link>
+          <p className="text-muted-foreground text-sm">Track your crypto savings and investments</p>
         </div>
 
         <Card className="border border-border shadow-lg">
           <CardHeader>
-            <CardTitle>Login to Dashboard</CardTitle>
+            <CardTitle>Access Your Dashboard</CardTitle>
             <CardDescription>
-              Access your savings plans and track your holdings
+              Sign in with Google to manage your DCA plans and track holdings
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded text-red-700 text-sm">
+                {error}
+              </div>
+            )}
+
             <Button
               onClick={handleGoogleLogin}
-              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-11"
+              disabled={isLoading}
+              className="w-full bg-white text-foreground border border-border hover:bg-muted font-semibold h-11 shadow-sm"
             >
-              Sign in with Google
+              {isLoading ? 'Signing in...' : 'Continue with Google'}
             </Button>
 
             <div className="relative">
@@ -40,12 +63,12 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Demo Mode</span>
+                <span className="bg-card px-2 text-muted-foreground">Secure Login</span>
               </div>
             </div>
 
-            <p className="text-center text-sm text-muted-foreground">
-              For demo purposes, click "Sign in with Google" to enter the dashboard.
+            <p className="text-center text-xs text-muted-foreground">
+              We use Supabase Auth to securely authenticate with your Google account
             </p>
           </CardContent>
         </Card>
