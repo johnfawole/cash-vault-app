@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { TrendingUp, Calendar, DollarSign } from 'lucide-react'
 
@@ -27,6 +27,12 @@ export function DCAPlansCard({ userId }: { userId: string }) {
     const fetchPlans = async () => {
       try {
         setIsLoading(true)
+        const supabase = getSupabase()
+        if (!supabase) {
+          setError('Database connection failed')
+          return
+        }
+
         const { data, error } = await supabase
           .from('dca_plans')
           .select('*')

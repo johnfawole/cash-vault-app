@@ -4,8 +4,21 @@ export function createClient() {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      auth: {
+        persistSession: true,
+        autoRefreshToken: true,
+        detectSessionInUrl: true,
+        storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+      },
+    }
   )
 }
 
-// Singleton instance for use in client components
-export const supabase = createClient()
+// Create instance only in browser
+export function getSupabase() {
+  if (typeof window === 'undefined') {
+    return null
+  }
+  return createClient()
+}

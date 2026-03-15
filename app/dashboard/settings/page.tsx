@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LogOut } from 'lucide-react'
@@ -16,6 +16,12 @@ export default function SettingsPage() {
   useEffect(() => {
     const checkAuth = async () => {
       try {
+        const supabase = getSupabase()
+        if (!supabase) {
+          router.push('/dashboard/login')
+          return
+        }
+
         const {
           data: { session },
         } = await supabase.auth.getSession()
@@ -39,7 +45,10 @@ export default function SettingsPage() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut()
+      const supabase = getSupabase()
+      if (supabase) {
+        await supabase.auth.signOut()
+      }
       router.push('/')
     } catch (error) {
       console.error('[v0] Logout error:', error)

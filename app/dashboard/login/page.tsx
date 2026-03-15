@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import Link from 'next/link'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 
 export default function DashboardLogin() {
   const [isLoading, setIsLoading] = useState(false)
@@ -15,6 +15,11 @@ export default function DashboardLogin() {
     setError(null)
 
     try {
+      const supabase = getSupabase()
+      if (!supabase) {
+        throw new Error('Database connection unavailable')
+      }
+
       const { error: authError } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {

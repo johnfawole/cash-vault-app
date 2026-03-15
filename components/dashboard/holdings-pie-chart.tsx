@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { supabase } from '@/lib/supabase/client'
+import { getSupabase } from '@/lib/supabase/client'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 
@@ -25,6 +25,12 @@ export function HoldingsPieChart({ userId }: { userId: string }) {
     const fetchHoldings = async () => {
       try {
         setIsLoading(true)
+        const supabase = getSupabase()
+        if (!supabase) {
+          setError('Database connection failed')
+          return
+        }
+
         const { data, error } = await supabase
           .from('dca_plans')
           .select('asset, amount')
