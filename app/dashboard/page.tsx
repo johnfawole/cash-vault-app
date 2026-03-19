@@ -8,46 +8,15 @@ import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { getConnectedAddress, onAccountsChanged } from '@/lib/walletConnector'
+import { getUserDCAPlans, calculateHoldings, type DCAPlan } from '@/app/actions/dashboard'
 
-// Mock data for demo
-const mockDCAPlans = [
-  {
-    id: '1',
-    name: 'Bitcoin Investment',
-    asset: 'BTC',
-    frequency: 'Weekly',
-    amount: 100,
-    nextPayment: '2026-03-20',
-  },
-  {
-    id: '2',
-    name: 'Ethereum Savings',
-    asset: 'ETH',
-    frequency: 'Monthly',
-    amount: 500,
-    nextPayment: '2026-04-01',
-  },
-  {
-    id: '3',
-    name: 'Stablecoin Pool',
-    asset: 'USDC',
-    frequency: 'Weekly',
-    amount: 250,
-    nextPayment: '2026-03-18',
-  },
-]
-
-const mockHoldings = [
-  { name: 'BTC', value: 2500, percentage: 45 },
-  { name: 'ETH', value: 1800, percentage: 32 },
-  { name: 'USDC', value: 1200, percentage: 23 },
-]
-
-const COLORS = ['#c4fa6b', '#6fa6ff', '#ff6b9d']
+const COLORS = ['#c4fa6b', '#6fa6ff', '#ff6b9d', '#ff8c42', '#a78bfa', '#f472b6']
 
 export default function DashboardPage() {
   const router = useRouter()
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
+  const [dcaPlans, setDcaPlans] = useState<DCAPlan[]>([])
+  const [holdings, setHoldings] = useState<Array<{ name: string; value: number; percentage: number }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -63,9 +32,19 @@ export default function DashboardPage() {
         }
         if (isMounted) {
           setWalletAddress(address)
+          // Fetch DCA plans for this wallet
+          const plans = await getUserDCAPlans(address)
+          if (isMounted) {
+            setDcaPlans(plans)
+            // Calculate holdings from plans
+            const holdingsData = await calculateHoldings(plans)
+            if (isMounted) {
+              setHoldings(holdingsData)
+            }
+          }
         }
       } catch (error) {
-        console.error('[v0] Wallet check error:', error)
+        console.error('[v0] Dashboard error:', error)
         router.push('/dashboard/login')
       } finally {
         if (isMounted) {
@@ -93,8 +72,6 @@ export default function DashboardPage() {
   }, [router])
 
   const handleLogout = () => {
-    // Redirect to home when logout is clicked
-    // User will need to manually disconnect wallet from MetaMask
     router.push('/')
   }
 
@@ -112,6 +89,8 @@ export default function DashboardPage() {
   if (!walletAddress) {
     return null
   }
+
+  const totalHoldings = holdings.reduce((sum, h) => sum + h.value, 0)
 
   return (
     <div className="flex h-screen bg-background">
@@ -173,85 +152,109 @@ export default function DashboardPage() {
               <p className="text-muted-foreground">Track your DCA savings plans and investment holdings</p>
             </div>
 
-            {/* Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* Left Column - DCA Plans */}
-              <div className="lg:col-span-2">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Active DCA Plans</CardTitle>
-                    <CardDescription>Your dollar-cost averaging investment plans</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      {mockDCAPlans.map((plan) => (
-                        <div key={plan.id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
-                          <div className="flex items-start justify-between mb-3">
-                            <div>
-                              <h3 className="font-semibold text-foreground">{plan.name}</h3>
-                              <p className="text-sm text-muted-foreground">{plan.asset}</p>
+            {dcaPlans.length === 0 ? (
+              <Card>
+                <CardContent className="p-12">
+                  <div className="text-center">
+                    <p className="text-muted-foreground mb-4">No DCA plans found for your wallet yet.</p>
+                    <p className="text-sm text-muted-foreground">Create your first DCA plan to get started.</p>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : (
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Left Column - DCA Plans */}
+                <div className="lg:col-span-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Active DCA Plans ({dcaPlans.length})</CardTitle>
+                      <CardDescription>Your dollar-cost averaging investment plans</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {dcaPlans.map((plan) => (
+                          <div key={plan.id} className="p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors">
+                            <div className="flex items-start justify-between mb-3">
+                              <div>
+                                <h3 className="font-semibold text-foreground">{plan.asset_symbol}</h3>
+                                <p className="text-sm text-muted-foreground">{plan.reminder_frequency}</p>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-foreground">${Number(plan.funded_amount).toLocaleString()}</p>
+                                <p className="text-xs text-muted-foreground">funded</p>
+                              </div>
                             </div>
-                            <div className="text-right">
-                              <p className="font-bold text-foreground">${plan.amount}</p>
-                              <p className="text-xs text-muted-foreground">{plan.frequency}</p>
+                            <div className="flex items-center justify-between text-sm">
+                              <span className="text-muted-foreground">Last updated:</span>
+                              <span className="font-medium">{new Date(plan.updated_at).toLocaleDateString()}</span>
                             </div>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Next payment:</span>
-                            <span className="font-medium">{plan.nextPayment}</span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
+                        ))}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
 
-              {/* Right Column - Holdings Chart */}
-              <div className="lg:col-span-1">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Holdings Distribution</CardTitle>
-                    <CardDescription>Your asset allocation</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ResponsiveContainer width="100%" height={300}>
-                      <PieChart>
-                        <Pie
-                          data={mockHoldings}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={false}
-                          label={({ name, percentage }) => `${name} ${percentage}%`}
-                          outerRadius={80}
-                          fill="#8884d8"
-                          dataKey="value"
-                        >
-                          {mockHoldings.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                          ))}
-                        </Pie>
-                        <Tooltip formatter={(value) => `$${value.toLocaleString()}`} />
-                        <Legend />
-                      </PieChart>
-                    </ResponsiveContainer>
+                {/* Right Column - Holdings Chart */}
+                <div className="lg:col-span-1">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Holdings Distribution</CardTitle>
+                      <CardDescription>Your asset allocation</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {holdings.length > 0 ? (
+                        <>
+                          <ResponsiveContainer width="100%" height={300}>
+                            <PieChart>
+                              <Pie
+                                data={holdings}
+                                cx="50%"
+                                cy="50%"
+                                labelLine={false}
+                                label={({ name, percentage }) => `${name} ${percentage}%`}
+                                outerRadius={80}
+                                fill="#8884d8"
+                                dataKey="value"
+                              >
+                                {holdings.map((entry, index) => (
+                                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                                ))}
+                              </Pie>
+                              <Tooltip formatter={(value) => `$${Number(value).toLocaleString()}`} />
+                              <Legend />
+                            </PieChart>
+                          </ResponsiveContainer>
 
-                    {/* Holdings Summary */}
-                    <div className="space-y-3 mt-6">
-                      {mockHoldings.map((holding, idx) => (
-                        <div key={idx} className="flex items-center justify-between text-sm">
-                          <div className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx] }}></div>
-                            <span className="text-muted-foreground">{holding.name}</span>
+                          {/* Holdings Summary */}
+                          <div className="space-y-3 mt-6">
+                            {holdings.map((holding, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-sm">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></div>
+                                  <span className="text-muted-foreground">{holding.name}</span>
+                                </div>
+                                <span className="font-medium">${holding.value.toLocaleString()}</span>
+                              </div>
+                            ))}
+                            <div className="pt-3 border-t border-border">
+                              <div className="flex items-center justify-between text-sm font-semibold">
+                                <span>Total</span>
+                                <span>${totalHoldings.toLocaleString()}</span>
+                              </div>
+                            </div>
                           </div>
-                          <span className="font-medium">${holding.value.toLocaleString()}</span>
+                        </>
+                      ) : (
+                        <div className="text-center py-8">
+                          <p className="text-sm text-muted-foreground">No holdings data available</p>
                         </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </main>
       </div>
