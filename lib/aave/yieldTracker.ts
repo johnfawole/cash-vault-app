@@ -1,8 +1,8 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server";
-import { aaveClient } from "./config";
 import { getVaultAddressForAsset } from "./vaultRegistry";
+import { PROTOCOL_FEE_PERCENT } from "./config";
 
 export interface VaultYieldData {
   yieldEarned: number;

@@ -1,8 +1,8 @@
 'use server'
 
 import { createClient } from "@/lib/supabase/server";
-import { getVaultAddressForAsset, isSupportedAsset } from "./vaultRegistry";
-import { MIN_DEPOSIT_AMOUNT } from "./config";
+import { getVaultAddressForAsset, isSupportedAsset } from "@/lib/aave/vaultRegistry";
+import { MIN_DEPOSIT_AMOUNT, PROTOCOL_FEE_PERCENT } from "@/lib/aave/config";
 
 export interface VaultPosition {
   id: string;
@@ -18,12 +18,37 @@ export interface VaultPosition {
 }
 
 /**
+ * Get all vault positions for a wallet
+ */
+export async function getUserVaultPositions(walletAddress: string): Promise<VaultPosition[]> {
+  try {
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from("vault_positions")
+      .select("*")
+      .eq("wallet_address", walletAddress)
+      .order("deposited_at", { ascending: false });
+
+    if (error) {
+      console.warn("[v0] Error fetching vault positions:", error.message);
+      return [];
+    }
+
+    return (data || []).map((position) => ({
+      ...position,
+      deposited_at: new Date(position.deposited_at),
+      last_synced_at: new Date(position.last_synced_at),
+    }));
+  } catch (error) {
+    console.error("[v0] Failed to fetch vault positions:", error);
+    return [];
+  }
+}
+
+/**
  * Create a new vault position when DCA reaches threshold
- * @param dcaPlanId - DCA plan ID
- * @param walletAddress - User's wallet address
- * @param asset - Token symbol
- * @param amount - Amount to deposit
- * @returns Created vault position or null if error
+ * Note: Actual deposit transaction happens on frontend via wallet
  */
 export async function createVaultPosition(
   dcaPlanId: string,
@@ -32,13 +57,12 @@ export async function createVaultPosition(
   amount: number
 ): Promise<VaultPosition | null> {
   try {
-    // Check if asset is supported
+    // Validate inputs
     if (!isSupportedAsset(asset)) {
       console.error("[v0] Asset not supported:", asset);
       return null;
     }
 
-    // Check if amount meets minimum
     if (amount < MIN_DEPOSIT_AMOUNT) {
       console.error("[v0] Amount below minimum deposit:", amount);
       return null;
@@ -48,6 +72,106 @@ export async function createVaultPosition(
     if (!vaultAddress) {
       console.error("[v0] Could not find vault address for:", asset);
       return null;
+    }
+
+    const supabase = await createClient();
+
+    // Create vault position record
+    const { data, error } = await supabase
+      .from("vault_positions")
+      .insert({
+        dca_plan_id: dcaPlanId,
+        wallet_address: walletAddress,
+        vault_address: vaultAddress,
+        underlying_asset: asset,
+        principal_deposited: amount,
+        yield_earned: 0,
+        yield_claimed_by_protocol: 0,
+        deposited_at: new Date().toISOString(),
+        last_synced_at: new Date().toISOString(),
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error("[v0] Error creating vault position:", error.message);
+      return null;
+    }
+
+    return {
+      ...data,
+      deposited_at: new Date(data.deposited_at),
+      last_synced_at: new Date(data.last_synced_at),
+    };
+  } catch (error) {
+    console.error("[v0] Failed to create vault position:", error);
+    return null;
+  }
+}
+
+/**
+ * Update yield for a vault position
+ * Called by cron job to sync on-chain yield data
+ */
+export async function updateVaultYield(
+  positionId: string,
+  totalYield: number
+): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+    const protocolFee = totalYield * (PROTOCOL_FEE_PERCENT / 100);
+    const userYield = totalYield - protocolFee;
+
+    const { error } = await supabase
+      .from("vault_positions")
+      .update({
+        yield_earned: userYield,
+        yield_claimed_by_protocol: protocolFee,
+        last_synced_at: new Date().toISOString(),
+      })
+      .eq("id", positionId);
+
+    if (error) {
+      console.error("[v0] Error updating vault yield:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[v0] Failed to update vault yield:", error);
+    return false;
+  }
+}
+
+/**
+ * Record yield history snapshot
+ */
+export async function recordYieldHistory(
+  positionId: string,
+  yieldEarned: number,
+  protocolFee: number
+): Promise<boolean> {
+  try {
+    const supabase = await createClient();
+
+    const { error } = await supabase.from("vault_yield_history").insert({
+      vault_position_id: positionId,
+      yield_amount: yieldEarned,
+      protocol_fee: protocolFee,
+      recorded_at: new Date().toISOString(),
+    });
+
+    if (error) {
+      console.error("[v0] Error recording yield history:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[v0] Failed to record yield history:", error);
+    return false;
+  }
+}
     }
 
     const supabase = await createClient();

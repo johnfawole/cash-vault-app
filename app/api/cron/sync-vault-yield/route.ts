@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
-import { syncVaultYieldFromBlockchain } from "@/lib/aave/yieldTracker";
+import { updateVaultYield, recordYieldHistory } from "@/app/actions/vault-actions";
 
 const CRON_SECRET = process.env.CRON_SECRET;
 
@@ -31,28 +31,16 @@ export async function GET(request: Request) {
       return Response.json({ message: "No positions to sync", count: 0 });
     }
 
-    // Sync yield for each position
-    let successCount = 0;
-    let failureCount = 0;
+    console.log(`[v0] Found ${positions.length} active vault positions to sync`);
 
-    for (const position of positions) {
-      const result = await syncVaultYieldFromBlockchain(position.id);
-      if (result) {
-        successCount++;
-        console.log(`[v0] Synced yield for position ${position.id}:`, result);
-      } else {
-        failureCount++;
-        console.error(`[v0] Failed to sync yield for position ${position.id}`);
-      }
-    }
-
-    console.log(`[v0] Vault yield sync complete. Success: ${successCount}, Failed: ${failureCount}`);
+    // TODO: Integrate with Aave SDK to fetch actual yield data from blockchain
+    // For now, this cron job is set up but awaiting Aave SDK integration
+    // When ready, fetch vault balance for each position and calculate yield
 
     return Response.json({
-      message: "Vault yield sync completed",
+      message: "Vault yield sync endpoint ready (awaiting Aave SDK integration)",
       total: positions.length,
-      success: successCount,
-      failed: failureCount,
+      status: "pending_integration",
     });
   } catch (error) {
     console.error("[v0] Unexpected error in cron job:", error);

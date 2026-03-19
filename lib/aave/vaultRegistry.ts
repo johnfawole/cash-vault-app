@@ -1,29 +1,41 @@
-import { evmAddress, chainId as aaveChainId } from "@aave/client";
-import { aaveClient, AAVE_VAULT_ADDRESSES } from "./config";
+import { getAaveVaultAddress, SUPPORTED_ASSETS, type SupportedAsset } from "./config";
 
 /**
- * Get vault address for a specific asset
- * @param asset - Token symbol (e.g., 'USDC', 'ETH')
- * @returns Vault contract address or null if not found
+ * Check if an asset is supported for Aave vault deposits
+ */
+export function isSupportedAsset(asset: string): asset is SupportedAsset {
+  return SUPPORTED_ASSETS.includes(asset as SupportedAsset);
+}
+
+/**
+ * Get vault address for an asset
+ * Returns null if asset not supported or vault not configured
  */
 export function getVaultAddressForAsset(asset: string): string | null {
-  const vaultAddress = AAVE_VAULT_ADDRESSES[asset.toUpperCase()];
-  return vaultAddress || null;
+  if (!isSupportedAsset(asset)) {
+    console.warn(`[v0] Asset ${asset} is not supported for Aave vaults`);
+    return null;
+  }
+
+  const vaultAddress = getAaveVaultAddress(asset);
+  if (!vaultAddress) {
+    console.warn(`[v0] Vault address not configured for ${asset}. Set NEXT_PUBLIC_AAVE_${asset}_VAULT`);
+    return null;
+  }
+
+  return vaultAddress;
 }
 
 /**
- * Check if an asset has a corresponding Aave vault
- * @param asset - Token symbol
- * @returns true if vault exists for asset
+ * Get all configured vaults
  */
-export function isSupportedAsset(asset: string): boolean {
-  return getVaultAddressForAsset(asset) !== null;
-}
+export function getConfiguredVaults(): Record<SupportedAsset, string | null> {
+  const vaults: Record<SupportedAsset, string | null> = {
+    USDC: getAaveVaultAddress("USDC"),
+    USDT: getAaveVaultAddress("USDT"),
+    DAI: getAaveVaultAddress("DAI"),
+    WETH: getAaveVaultAddress("WETH"),
+  };
 
-/**
- * Get all supported vault assets
- * @returns Array of supported asset symbols
- */
-export function getSupportedAssets(): string[] {
-  return Object.keys(AAVE_VAULT_ADDRESSES).filter((key) => AAVE_VAULT_ADDRESSES[key]);
+  return vaults;
 }
