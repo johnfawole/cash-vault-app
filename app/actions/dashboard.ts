@@ -21,22 +21,26 @@ export async function getUserDCAPlans(walletAddress: string): Promise<DCAPlan[]>
   try {
     const supabase = await createClient()
 
-    // Query dca_plans by user_email (derived from wallet) or user_id
-    // Since wallet auth stores wallet address, we search by wallet pattern or email
+    console.log('[v0] Fetching DCA plans for wallet:', walletAddress)
+
+    // First try: Query with explicit column selection
+    // Query dca_plans where user_email matches wallet address
     const { data, error } = await supabase
       .from('dca_plans')
-      .select('*')
-      .eq('user_email', walletAddress.toLowerCase())
-      .order('created_at', { ascending: false })
+      .select('id, plan_id, user_id, asset_symbol, asset_token, funded_amount, reminder_frequency, email_reminders_enabled, user_email, created_at, updated_at, last_reminder_sent')
+      .or(`user_email.eq.${walletAddress},user_email.ilike.%${walletAddress.toLowerCase()}%`)
+      .order('updated_at', { ascending: false })
 
     if (error) {
-      console.error('[v0] Error fetching DCA plans:', error)
+      console.error('[v0] DCA query error:', error.message, error.code)
+      // Return empty array gracefully if there's an issue
       return []
     }
 
+    console.log('[v0] DCA plans found:', data?.length || 0)
     return data || []
   } catch (error) {
-    console.error('[v0] Failed to fetch user DCA plans:', error)
+    console.error('[v0] Unexpected error fetching DCA plans:', error)
     return []
   }
 }
