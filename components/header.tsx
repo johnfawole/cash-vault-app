@@ -109,9 +109,9 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
-            <Link href="/dashboard">
+            <Link href={isWalletConnected ? "/dashboard" : "/dashboard/login"}>
               <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold hidden sm:inline-flex">
-                Dashboard
+                {isWalletConnected ? "Dashboard" : "Login"}
               </Button>
             </Link>
             <Button

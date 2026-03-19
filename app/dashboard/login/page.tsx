@@ -1,26 +1,66 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft } from 'lucide-react'
-import { signInWithGoogle } from '@/app/actions/auth'
+import { ArrowLeft, Wallet } from 'lucide-react'
+import { connectWallet, getConnectedAddress } from '@/lib/walletConnector'
 
 export default function LoginPage() {
+  const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isCheckingWallet, setIsCheckingWallet] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [walletConnected, setWalletConnected] = useState(false)
 
-  const handleGoogleLogin = async () => {
+  // Check if wallet is already connected on page load
+  useEffect(() => {
+    const checkWallet = async () => {
+      try {
+        const address = await getConnectedAddress()
+        if (address) {
+          setWalletConnected(true)
+          // Redirect to dashboard if wallet is already connected
+          router.push('/dashboard')
+        }
+      } catch (err) {
+        console.error('[v0] Error checking wallet:', err)
+      } finally {
+        setIsCheckingWallet(false)
+      }
+    }
+
+    checkWallet()
+  }, [router])
+
+  const handleConnectWallet = async () => {
     setIsLoading(true)
     setError(null)
     try {
-      await signInWithGoogle()
+      await connectWallet()
+      setWalletConnected(true)
+      // Redirect to dashboard after successful connection
+      router.push('/dashboard')
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to sign in with Google'
-      setError(errorMsg)
+      const errorMsg = err instanceof Error ? err.message : 'Failed to connect wallet'
+      if (!errorMsg.includes('Redirecting')) {
+        setError(errorMsg)
+      }
       setIsLoading(false)
     }
+  }
+
+  if (isCheckingWallet) {
+    return (
+      <main className="min-h-screen bg-gradient-to-br from-background to-muted flex items-center justify-center p-4">
+        <div className="text-center">
+          <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Checking wallet connection...</p>
+        </div>
+      </main>
+    )
   }
 
   return (
@@ -40,7 +80,7 @@ export default function LoginPage() {
           <CardHeader>
             <CardTitle>Access Your Dashboard</CardTitle>
             <CardDescription>
-              Sign in with Google to manage your DCA plans and track holdings
+              Connect your wallet to manage your DCA plans and track holdings
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -51,11 +91,12 @@ export default function LoginPage() {
             )}
 
             <Button
-              onClick={handleGoogleLogin}
+              onClick={handleConnectWallet}
               disabled={isLoading}
-              className="w-full bg-white text-foreground border border-border hover:bg-muted font-semibold h-11 shadow-sm"
+              className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold h-11 shadow-sm flex items-center justify-center gap-2"
             >
-              {isLoading ? 'Signing in...' : 'Continue with Google'}
+              <Wallet className="w-4 h-4" />
+              {isLoading ? 'Connecting...' : 'Connect Wallet'}
             </Button>
 
             <div className="relative">
@@ -63,12 +104,13 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Secure Login</span>
+                <span className="bg-card px-2 text-muted-foreground">Wallet Authentication</span>
               </div>
             </div>
 
-            <p className="text-center text-xs text-muted-foreground">
-              We use Supabase Auth to securely authenticate with your Google account
+            <p className="text-center text-xs text-muted-foreground space-y-2">
+              <div>Your wallet address is your unique authentication credential.</div>
+              <div>No passwords. No emails. Just your wallet.</div>
             </p>
           </CardContent>
         </Card>
