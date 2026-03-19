@@ -4,13 +4,11 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { LogOut, Menu, TrendingUp } from 'lucide-react'
+import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { getConnectedAddress, onAccountsChanged } from '@/lib/walletConnector'
 import { getUserDCAPlans, calculateHoldings, type DCAPlan } from '@/app/actions/dashboard'
-import { getUserVaultPositions } from '@/app/actions/vault-actions'
-import type { VaultPosition } from '@/lib/aave/erc4626Interface'
 
 const COLORS = ['#c4fa6b', '#6fa6ff', '#ff6b9d', '#ff8c42', '#a78bfa', '#f472b6']
 
@@ -19,7 +17,6 @@ export default function DashboardPage() {
   const [walletAddress, setWalletAddress] = useState<string | null>(null)
   const [dcaPlans, setDcaPlans] = useState<DCAPlan[]>([])
   const [holdings, setHoldings] = useState<Array<{ name: string; value: number; percentage: number }>>([])
-  const [vaultPositions, setVaultPositions] = useState<VaultPosition[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
@@ -43,11 +40,6 @@ export default function DashboardPage() {
             const holdingsData = await calculateHoldings(plans)
             if (isMounted) {
               setHoldings(holdingsData)
-              // Fetch vault positions
-              const vaults = await getUserVaultPositions(address)
-              if (isMounted) {
-                setVaultPositions(vaults)
-              }
             }
           }
         }
@@ -204,61 +196,6 @@ export default function DashboardPage() {
                       </div>
                     </CardContent>
                   </Card>
-
-                  {/* Vault Yield Card */}
-                  {vaultPositions.length > 0 && (
-                    <Card className="mt-8">
-                      <CardHeader>
-                        <div className="flex items-center gap-2">
-                          <TrendingUp className="w-5 h-5 text-primary" />
-                          <div>
-                            <CardTitle>Aave Vault Yield</CardTitle>
-                            <CardDescription>Your automated yield earnings</CardDescription>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          {vaultPositions.map((position, idx) => {
-                            const totalYield = position.yieldEarned + position.feesCollected
-                            const userYield = position.yieldEarned - position.feesCollected
-
-                            return (
-                              <div key={idx} className="p-4 border border-border rounded-lg bg-primary/5">
-                                <div className="flex items-start justify-between mb-3">
-                                  <div>
-                                    <h3 className="font-semibold text-foreground">{position.walletAddress.slice(0, 8)}...</h3>
-                                    <p className="text-sm text-muted-foreground">{position.walletAddress}</p>
-                                  </div>
-                                  <div className="text-right">
-                                    <p className="font-bold text-primary">${(Number(position.assetsValue) / 1e18).toFixed(2)}</p>
-                                    <p className="text-xs text-muted-foreground">vault balance</p>
-                                  </div>
-                                </div>
-                                <div className="grid grid-cols-3 gap-4 text-sm">
-                                  <div>
-                                    <p className="text-muted-foreground">Yield Earned</p>
-                                    <p className="font-semibold text-foreground">${(Number(totalYield) / 1e18).toFixed(4)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Your Portion (90%)</p>
-                                    <p className="font-semibold text-primary">${(Number(userYield) / 1e18).toFixed(4)}</p>
-                                  </div>
-                                  <div>
-                                    <p className="text-muted-foreground">Fees Collected (10%)</p>
-                                    <p className="font-semibold text-yellow-600">${(Number(position.feesCollected) / 1e18).toFixed(4)}</p>
-                                  </div>
-                                </div>
-                                <p className="text-xs text-muted-foreground mt-3">
-                                  Since {position.depositedAt.toLocaleDateString()}
-                                </p>
-                              </div>
-                            )
-                          })}
-                        </div>
-                      </CardContent>
-                    </Card>
-                  )}
                 </div>
 
                 {/* Right Column - Holdings Chart */}
