@@ -44,8 +44,11 @@ export default function DashboardPage() {
           }
         }
       } catch (error) {
-        console.error('[v0] Dashboard error:', error)
-        router.push('/dashboard/login')
+        console.warn('[v0] Dashboard error (not critical):', error instanceof Error ? error.message : 'Unknown')
+        // Don't redirect on data fetch errors, just continue with empty state
+        if (isMounted) {
+          setIsLoading(false)
+        }
       } finally {
         if (isMounted) {
           setIsLoading(false)

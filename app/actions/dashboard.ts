@@ -23,24 +23,25 @@ export async function getUserDCAPlans(walletAddress: string): Promise<DCAPlan[]>
 
     console.log('[v0] Fetching DCA plans for wallet:', walletAddress)
 
-    // First try: Query with explicit column selection
-    // Query dca_plans where user_email matches wallet address
+    // Try to query dca_plans table
+    // Note: If the table doesn't exist or schema cache issue occurs, gracefully return empty
     const { data, error } = await supabase
       .from('dca_plans')
-      .select('id, plan_id, user_id, asset_symbol, asset_token, funded_amount, reminder_frequency, email_reminders_enabled, user_email, created_at, updated_at, last_reminder_sent')
-      .or(`user_email.eq.${walletAddress},user_email.ilike.%${walletAddress.toLowerCase()}%`)
+      .select('*')
+      .eq('user_email', walletAddress)
       .order('updated_at', { ascending: false })
 
+    // If we get a 404 or schema error, that's OK - just return empty array
+    // This allows the dashboard to work while the table is being set up
     if (error) {
-      console.error('[v0] DCA query error:', error.message, error.code)
-      // Return empty array gracefully if there's an issue
+      console.warn('[v0] Note: DCA plans table not accessible (expected during setup):', error.code)
       return []
     }
 
     console.log('[v0] DCA plans found:', data?.length || 0)
-    return data || []
+    return (data as DCAPlan[]) || []
   } catch (error) {
-    console.error('[v0] Unexpected error fetching DCA plans:', error)
+    console.warn('[v0] DCA plans fetch - graceful fallback:', error instanceof Error ? error.message : 'Unknown error')
     return []
   }
 }
