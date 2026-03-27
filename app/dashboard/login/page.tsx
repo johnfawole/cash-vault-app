@@ -39,21 +39,28 @@ export default function LoginPage() {
 
   // Load and initialize Google Sign-In
   useEffect(() => {
-    const googleClientId = process.env.NEXT_PUBLIC_Google_Client_ID
-    if (!googleClientId) {
-      console.warn('[v0] Google Client ID not configured')
-      return
-    }
-
     const loadGoogle = async () => {
       try {
-        await loadGoogleSignInScript(googleClientId)
+        // Fetch Client ID from server endpoint
+        const response = await fetch('/api/config/google-client-id')
+        if (!response.ok) {
+          console.warn('[v0] Failed to fetch Google Client ID')
+          return
+        }
+
+        const { clientId } = await response.json()
+        if (!clientId) {
+          console.warn('[v0] Google Client ID is empty')
+          return
+        }
+
+        await loadGoogleSignInScript(clientId)
         setGoogleScriptLoaded(true)
         
         // Initialize the Google Sign-In button
         initializeGoogleSignIn(
           'google-signin-button',
-          googleClientId,
+          clientId,
           handleGoogleSuccess,
           handleGoogleError
         )
