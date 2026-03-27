@@ -39,7 +39,7 @@ export default function LoginPage() {
 
   // Load and initialize Google Sign-In
   useEffect(() => {
-    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    const googleClientId = process.env.NEXT_PUBLIC_Google_Client_ID
     if (!googleClientId) {
       console.warn('[v0] Google Client ID not configured')
       return
