@@ -41,19 +41,26 @@ export default function LoginPage() {
   useEffect(() => {
     const loadGoogle = async () => {
       try {
+        console.log('[v0] Fetching Google Client ID from endpoint...')
         // Fetch Client ID from server endpoint
         const response = await fetch('/api/config/google-client-id')
+        console.log('[v0] Response status:', response.status)
+        
         if (!response.ok) {
-          console.warn('[v0] Failed to fetch Google Client ID')
+          const errorData = await response.json()
+          console.error('[v0] Failed to fetch Google Client ID:', errorData)
           return
         }
 
         const { clientId } = await response.json()
+        console.log('[v0] Got Client ID:', clientId ? 'present' : 'empty')
+        
         if (!clientId) {
           console.warn('[v0] Google Client ID is empty')
           return
         }
 
+        console.log('[v0] Loading Google script...')
         await loadGoogleSignInScript(clientId)
         setGoogleScriptLoaded(true)
         
