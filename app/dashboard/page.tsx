@@ -19,9 +19,24 @@ export default function DashboardPage() {
   const [holdings, setHoldings] = useState<Array<{ name: string; value: number; percentage: number }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null)
+
+  // Function to refresh data
+  const refreshData = async (address: string) => {
+    try {
+      const plans = await getUserDCAPlans(address)
+      setDcaPlans(plans)
+      const holdingsData = await calculateHoldings(plans)
+      setHoldings(holdingsData)
+      setLastUpdated(new Date())
+    } catch (error) {
+      console.warn('[v0] Error refreshing data:', error instanceof Error ? error.message : 'Unknown')
+    }
+  }
 
   useEffect(() => {
     let isMounted = true
+    let refreshInterval: NodeJS.Timeout | null = null
 
     const checkAuth = async () => {
       try {
@@ -32,20 +47,18 @@ export default function DashboardPage() {
         }
         if (isMounted) {
           setWalletAddress(address)
-          // Fetch DCA plans for this wallet
-          const plans = await getUserDCAPlans(address)
-          if (isMounted) {
-            setDcaPlans(plans)
-            // Calculate holdings from plans
-            const holdingsData = await calculateHoldings(plans)
+          // Initial data fetch
+          await refreshData(address)
+          
+          // Set up periodic refresh every 5 seconds
+          refreshInterval = setInterval(() => {
             if (isMounted) {
-              setHoldings(holdingsData)
+              refreshData(address)
             }
-          }
+          }, 5000)
         }
       } catch (error) {
         console.warn('[v0] Dashboard error (not critical):', error instanceof Error ? error.message : 'Unknown')
-        // Don't redirect on data fetch errors, just continue with empty state
         if (isMounted) {
           setIsLoading(false)
         }
@@ -62,7 +75,6 @@ export default function DashboardPage() {
     const unsubscribe = onAccountsChanged((accounts) => {
       if (isMounted) {
         if (!accounts || accounts.length === 0) {
-          // Wallet disconnected, redirect to login
           router.push('/dashboard/login')
         }
       }
@@ -70,6 +82,9 @@ export default function DashboardPage() {
 
     return () => {
       isMounted = false
+      if (refreshInterval) {
+        clearInterval(refreshInterval)
+      }
       unsubscribe()
     }
   }, [router])
@@ -151,8 +166,17 @@ export default function DashboardPage() {
         <main className="flex-1 overflow-auto">
           <div className="p-4 md:p-8 max-w-7xl mx-auto w-full">
             <div className="mb-8">
-              <h1 className="text-4xl font-bold text-foreground mb-2">Welcome to Your Dashboard</h1>
-              <p className="text-muted-foreground">Track your DCA savings plans and investment holdings</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <h1 className="text-4xl font-bold text-foreground mb-2">Welcome to Your Dashboard</h1>
+                  <p className="text-muted-foreground">Track your DCA savings plans and investment holdings</p>
+                </div>
+                {lastUpdated && (
+                  <div className="text-right text-sm text-muted-foreground">
+                    <p>Updated {Math.round((new Date().getTime() - lastUpdated.getTime()) / 1000)}s ago</p>
+                  </div>
+                )}
+              </div>
             </div>
 
             {dcaPlans.length === 0 ? (
