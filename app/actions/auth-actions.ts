@@ -156,3 +156,64 @@ export async function clearAuthCookie() {
   const cookieStore = await cookies()
   cookieStore.delete("cashvault_session")
 }
+
+/**
+ * Create or update user from Google Sign-In
+ */
+export async function upsertGoogleUser(
+  googleId: string,
+  email: string,
+  fullName: string,
+  avatarUrl: string
+) {
+  try {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Supabase credentials are not configured")
+    }
+
+    // Use service role key to bypass RLS for user creation
+    const response = await fetch(`${supabaseUrl}/rest/v1/users`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${supabaseKey}`,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates",
+      },
+      body: JSON.stringify({
+        email,
+        full_name: fullName,
+        google_id: googleId,
+        avatar_url: avatarUrl,
+      }),
+    })
+
+    if (!response.ok) {
+      const error = await response.json()
+      console.error("[v0] Error creating user:", error)
+      throw new Error(`Failed to create user: ${error.message}`)
+    }
+
+    const user = await response.json()
+    return user
+  } catch (error) {
+    console.error("[v0] Error in upsertGoogleUser:", error)
+    return null
+  }
+}
+
+/**
+ * Store Google auth session in localStorage
+ */
+export function setGoogleAuthSession(googleId: string, email: string, name: string) {
+  const session = {
+    type: 'google',
+    googleId,
+    email,
+    name,
+    timestamp: new Date().toISOString(),
+  }
+  localStorage.setItem('cashvault_auth', JSON.stringify(session))
+}

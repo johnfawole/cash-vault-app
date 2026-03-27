@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { ArrowLeft, Wallet } from 'lucide-react'
+import { ArrowLeft, Wallet, Mail } from 'lucide-react'
 import { connectWallet, getConnectedAddress } from '@/lib/walletConnector'
+import { loadGoogleSignInScript, initializeGoogleSignIn, type GoogleSignInResponse } from '@/lib/googleAuth'
+import { upsertGoogleUser, setGoogleAuthSession } from '@/app/actions/auth-actions'
 
 export default function LoginPage() {
   const router = useRouter()
@@ -14,6 +16,7 @@ export default function LoginPage() {
   const [isCheckingWallet, setIsCheckingWallet] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [walletConnected, setWalletConnected] = useState(false)
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false)
 
   // Check if wallet is already connected on page load
   useEffect(() => {
@@ -22,7 +25,6 @@ export default function LoginPage() {
         const address = await getConnectedAddress()
         if (address) {
           setWalletConnected(true)
-          // Redirect to dashboard if wallet is already connected
           router.push('/dashboard')
         }
       } catch (err) {
@@ -34,6 +36,34 @@ export default function LoginPage() {
 
     checkWallet()
   }, [router])
+
+  // Load and initialize Google Sign-In
+  useEffect(() => {
+    const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
+    if (!googleClientId) {
+      console.warn('[v0] Google Client ID not configured')
+      return
+    }
+
+    const loadGoogle = async () => {
+      try {
+        await loadGoogleSignInScript(googleClientId)
+        setGoogleScriptLoaded(true)
+        
+        // Initialize the Google Sign-In button
+        initializeGoogleSignIn(
+          'google-signin-button',
+          googleClientId,
+          handleGoogleSuccess,
+          handleGoogleError
+        )
+      } catch (err) {
+        console.error('[v0] Failed to load Google Sign-In:', err)
+      }
+    }
+
+    loadGoogle()
+  }, [])
 
   const handleConnectWallet = async () => {
     setIsLoading(true)
@@ -50,6 +80,41 @@ export default function LoginPage() {
       }
       setIsLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = async (response: GoogleSignInResponse) => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      // Create or update user in database
+      const user = await upsertGoogleUser(
+        response.sub,
+        response.email,
+        response.name,
+        response.picture
+      )
+
+      if (!user) {
+        setError('Failed to create user account')
+        setIsLoading(false)
+        return
+      }
+
+      // Store auth session
+      setGoogleAuthSession(response.sub, response.email, response.name)
+
+      // Redirect to dashboard
+      router.push('/dashboard')
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Google Sign-In failed'
+      setError(errorMsg)
+      setIsLoading(false)
+    }
+  }
+
+  const handleGoogleError = () => {
+    setError('Google Sign-In failed. Please try again.')
+    setIsLoading(false)
   }
 
   if (isCheckingWallet) {
@@ -90,6 +155,7 @@ export default function LoginPage() {
               </div>
             )}
 
+            {/* Wallet Connection */}
             <Button
               onClick={handleConnectWallet}
               disabled={isLoading}
@@ -104,13 +170,25 @@ export default function LoginPage() {
                 <span className="w-full border-t border-border"></span>
               </div>
               <div className="relative flex justify-center text-xs uppercase">
-                <span className="bg-card px-2 text-muted-foreground">Wallet Authentication</span>
+                <span className="bg-card px-2 text-muted-foreground">Or continue with</span>
               </div>
             </div>
 
+            {/* Google Sign-In */}
+            {googleScriptLoaded && (
+              <div id="google-signin-button" className="w-full"></div>
+            )}
+
+            {!googleScriptLoaded && (
+              <Button disabled variant="outline" className="w-full h-11">
+                <Mail className="w-4 h-4 mr-2" />
+                Loading Google Sign-In...
+              </Button>
+            )}
+
             <p className="text-center text-xs text-muted-foreground space-y-2">
-              <div>Your wallet address is your unique authentication credential.</div>
-              <div>No passwords. No emails. Just your wallet.</div>
+              <div>Connect securely using your wallet or Google account.</div>
+              <div>No passwords. Your choice of authentication.</div>
             </p>
           </CardContent>
         </Card>
