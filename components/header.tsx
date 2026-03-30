@@ -109,6 +109,11 @@ export function Header() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <Link href={isWalletConnected ? "/dashboard" : "/dashboard/login"}>
+              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold hidden sm:inline-flex">
+                {isWalletConnected ? "Dashboard" : "Login"}
+              </Button>
+            </Link>
             <Button
               onClick={handleConnectWallet}
               disabled={isConnecting}
@@ -122,11 +127,6 @@ export function Header() {
               <Wallet className="w-4 h-4" />
               {isConnecting ? "Connecting..." : isWalletConnected ? "Connected" : "Connect Wallet"}
             </Button>
-            <Link href="/waitlist">
-              <Button size="sm" className="bg-primary text-primary-foreground hover:bg-primary/90 text-sm font-semibold hidden sm:inline-flex">
-                Join Waitlist
-              </Button>
-            </Link>
           </div>
         </div>
       </div>

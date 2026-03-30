@@ -62,6 +62,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google-site-verification" content={process.env.NEXT_PUBLIC_Google_Client_ID} />
+      </head>
       <body className={`font-sans antialiased`}>
         {children}
         <Analytics />
