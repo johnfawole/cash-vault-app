@@ -10,13 +10,13 @@ importers:
     dependencies:
       '@aave/client':
         specifier: 0.9.2
-        version: 0.9.2(@privy-io/server-auth@1.32.5(bufferutil@4.1.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)))(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(thirdweb@5.119.3(46a26fab63a67b32ad00ed3f9ede9c70))(typescript@5.9.3)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))
+        version: 0.9.2(@privy-io/server-auth@1.32.5(bufferutil@4.1.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)))(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(thirdweb@5.119.3(649da0f0f48c8e4491db589f2e630a83))(typescript@5.9.3)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))
       '@aws-sdk/client-lambda':
         specifier: latest
-        version: 3.1019.0
+        version: 3.1020.0
       '@aws-sdk/credential-providers':
         specifier: latest
-        version: 3.1019.0
+        version: 3.1020.0
       '@coinbase/wallet-mobile-sdk':
         specifier: latest
         version: 1.1.2(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
@@ -146,6 +146,12 @@ importers:
       ethers:
         specifier: 6.16.0
         version: 6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
+      expo:
+        specifier: latest
+        version: 55.0.9(@babel/core@7.29.0)(@expo/dom-webview@55.0.3)(bufferutil@4.1.0)(react-dom@19.2.0(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      expo-build-properties:
+        specifier: latest
+        version: 55.0.10(expo@55.0.9)
       expo-linking:
         specifier: latest
         version: 55.0.9(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(typescript@5.9.3)
@@ -182,12 +188,18 @@ importers:
       react-native-aes-gcm-crypto:
         specifier: latest
         version: 0.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
+      react-native-nitro-modules:
+        specifier: latest
+        version: 0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       react-native-passkey:
         specifier: latest
         version: 3.3.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
+      react-native-quick-base64:
+        specifier: latest
+        version: 2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       react-native-quick-crypto:
         specifier: latest
-        version: 1.0.18(expo@55.0.9)(react-native-nitro-modules@0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native-quick-base64@2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
+        version: 1.0.18(expo-build-properties@55.0.10(expo@55.0.9))(expo@55.0.9)(react-native-nitro-modules@0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native-quick-base64@2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       react-native-svg:
         specifier: latest
         version: 15.15.4(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
@@ -208,7 +220,7 @@ importers:
         version: 1.0.7(tailwindcss@4.2.2)
       thirdweb:
         specifier: latest
-        version: 5.119.3(46a26fab63a67b32ad00ed3f9ede9c70)
+        version: 5.119.3(649da0f0f48c8e4491db589f2e630a83)
       vaul:
         specifier: ^0.9.9
         version: 0.9.9(@types/react-dom@19.2.3(@types/react@19.2.14))(@types/react@19.2.14)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -313,12 +325,12 @@ packages:
   '@aws-crypto/util@5.2.0':
     resolution: {integrity: sha512-4RkU9EsI6ZpBve5fseQlGNUWKMa1RLPQ1dnjnQoe07ldfIzcsGb5hC5W0Dm7u423KWzawlrpbjXBrXCEv9zazQ==}
 
-  '@aws-sdk/client-cognito-identity@3.1019.0':
-    resolution: {integrity: sha512-nl6J9+6GqEPKPgVbJbfxL97rTgj1gdXHolXutOdW3A3uux7paHxAdTt3ck8TA6Juwz/DwuL3kGqszqCFjy547A==}
+  '@aws-sdk/client-cognito-identity@3.1020.0':
+    resolution: {integrity: sha512-t5/gfQQ4gxDz/Mk2TXmdoZtXSG62/nnF0+0ddemnx9uTWvZRs93FZcRJ4mqXfv7qH1iE7Ax2hmEOTRYfU5kn3w==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/client-lambda@3.1019.0':
-    resolution: {integrity: sha512-LY09Psko+VwXC8JKrX+nXE0z3N4nd7yF0zwxk/xQTjySB+EcnJxl3tEGPohvwrjEcOT7P7YIYUn+QliIW8rmoQ==}
+  '@aws-sdk/client-lambda@3.1020.0':
+    resolution: {integrity: sha512-w6NyCQvY/l9fkh6QpmYRO0s1HxorDAwzeAxa341E8Zybp4pPk+4miUy/6BINiX6g0QM2+E+UAYMAjMJjQv47sw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/core@3.973.26':
@@ -361,8 +373,8 @@ packages:
     resolution: {integrity: sha512-CUY4hQIFswdQNEsRGEzGBUKGMK5KpqmNDdu2ROMgI+45PLFS8H0y3Tm7kvM16uvvw3n1pVxk85tnRVUTgtaa1w==}
     engines: {node: '>=20.0.0'}
 
-  '@aws-sdk/credential-providers@3.1019.0':
-    resolution: {integrity: sha512-F6dsoXZgBzpR7/EmhlVd0CKQYa9qwlq8CYFfzvF+QCZNhMKad7Tsv8beLCxQ+yd7CzDYVBNIJ87VI6Si1Ht0Qg==}
+  '@aws-sdk/credential-providers@3.1020.0':
+    resolution: {integrity: sha512-7Om61RrVCy4ox3OBaqfsyJ47DPuEjE4f9HBqqt0YWdIWYF2ElXlfBjI2/wvSnF4mOJNQiSScOwzG1emsHTuvQw==}
     engines: {node: '>=20.0.0'}
 
   '@aws-sdk/middleware-host-header@3.972.8':
@@ -4927,6 +4939,11 @@ packages:
       react: '*'
       react-native: '*'
 
+  expo-build-properties@55.0.10:
+    resolution: {integrity: sha512-9+JCQuIQaEi27XDIFTR2Y4vok0FidWux2UKrKWD5E38/0fozbZcVUzS14FgMF1F0lalmXMgebH/vjRpbYWJIMA==}
+    peerDependencies:
+      expo: '*'
+
   expo-constants@55.0.9:
     resolution: {integrity: sha512-iBiXjZeuU5S/8docQeNzsVvtDy4w0zlmXBpFEi1ypwugceEpdQQab65TVRbusXAcwpNVxCPMpNlDssYp0Pli2g==}
     peerDependencies:
@@ -7603,7 +7620,7 @@ snapshots:
       graphql: 16.13.1
       typescript: 5.9.3
 
-  '@aave/client@0.9.2(@privy-io/server-auth@1.32.5(bufferutil@4.1.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)))(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(thirdweb@5.119.3(46a26fab63a67b32ad00ed3f9ede9c70))(typescript@5.9.3)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))':
+  '@aave/client@0.9.2(@privy-io/server-auth@1.32.5(bufferutil@4.1.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)))(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(thirdweb@5.119.3(649da0f0f48c8e4491db589f2e630a83))(typescript@5.9.3)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))':
     dependencies:
       '@aave/core': 0.1.0
       '@aave/graphql': 0.11.0(typescript@5.9.3)
@@ -7613,7 +7630,7 @@ snapshots:
     optionalDependencies:
       '@privy-io/server-auth': 1.32.5(bufferutil@4.1.0)(ethers@6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6))(typescript@5.9.3)(utf-8-validate@6.0.6)(viem@2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76))
       ethers: 6.16.0(bufferutil@4.1.0)(utf-8-validate@6.0.6)
-      thirdweb: 5.119.3(46a26fab63a67b32ad00ed3f9ede9c70)
+      thirdweb: 5.119.3(649da0f0f48c8e4491db589f2e630a83)
       viem: 2.47.4(bufferutil@4.1.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(zod@3.25.76)
     transitivePeerDependencies:
       - '@gql.tada/svelte-support'
@@ -7680,7 +7697,7 @@ snapshots:
       '@smithy/util-utf8': 2.3.0
       tslib: 2.8.1
 
-  '@aws-sdk/client-cognito-identity@3.1019.0':
+  '@aws-sdk/client-cognito-identity@3.1020.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -7724,7 +7741,7 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/client-lambda@3.1019.0':
+  '@aws-sdk/client-lambda@3.1020.0':
     dependencies:
       '@aws-crypto/sha256-browser': 5.2.0
       '@aws-crypto/sha256-js': 5.2.0
@@ -7903,9 +7920,9 @@ snapshots:
     transitivePeerDependencies:
       - aws-crt
 
-  '@aws-sdk/credential-providers@3.1019.0':
+  '@aws-sdk/credential-providers@3.1020.0':
     dependencies:
-      '@aws-sdk/client-cognito-identity': 3.1019.0
+      '@aws-sdk/client-cognito-identity': 3.1020.0
       '@aws-sdk/core': 3.973.26
       '@aws-sdk/credential-provider-cognito-identity': 3.972.20
       '@aws-sdk/credential-provider-env': 3.972.24
@@ -14009,7 +14026,7 @@ snapshots:
 
   compressible@2.0.18:
     dependencies:
-      mime-db: 1.52.0
+      mime-db: 1.54.0
 
   compression@1.8.1:
     dependencies:
@@ -14435,6 +14452,13 @@ snapshots:
       - supports-color
       - typescript
 
+  expo-build-properties@55.0.10(expo@55.0.9):
+    dependencies:
+      '@expo/schema-utils': 55.0.2
+      expo: 55.0.9(@babel/core@7.29.0)(@expo/dom-webview@55.0.3)(bufferutil@4.1.0)(react-dom@19.2.0(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      resolve-from: 5.0.0
+      semver: 7.7.4
+
   expo-constants@55.0.9(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(typescript@5.9.3):
     dependencies:
       '@expo/config': 55.0.11(typescript@5.9.3)
@@ -14542,7 +14566,7 @@ snapshots:
 
   extension-port-stream@3.0.0:
     dependencies:
-      readable-stream: 3.6.2
+      readable-stream: 4.5.2
       webextension-polyfill: 0.10.0
 
   eyes@0.1.8: {}
@@ -16239,7 +16263,7 @@ snapshots:
       react: 19.2.0
       react-native: 0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)
 
-  react-native-quick-crypto@1.0.18(expo@55.0.9)(react-native-nitro-modules@0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native-quick-base64@2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0):
+  react-native-quick-crypto@1.0.18(expo-build-properties@55.0.10(expo@55.0.9))(expo@55.0.9)(react-native-nitro-modules@0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native-quick-base64@2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0):
     dependencies:
       '@craftzdog/react-native-buffer': 6.1.0(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       events: 3.3.0
@@ -16253,6 +16277,7 @@ snapshots:
       util: 0.12.5
     optionalDependencies:
       expo: 55.0.9(@babel/core@7.29.0)(@expo/dom-webview@55.0.3)(bufferutil@4.1.0)(react-dom@19.2.0(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@6.0.6)
+      expo-build-properties: 55.0.10(expo@55.0.9)
 
   react-native-svg@15.15.4(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0):
     dependencies:
@@ -16788,7 +16813,7 @@ snapshots:
 
   text-encoding-utf-8@1.0.2: {}
 
-  thirdweb@5.119.3(46a26fab63a67b32ad00ed3f9ede9c70):
+  thirdweb@5.119.3(649da0f0f48c8e4491db589f2e630a83):
     dependencies:
       '@base-org/account': 2.5.0(@types/react@19.2.14)(bufferutil@4.1.0)(fastestsmallesttextencoderdecoder@1.0.22)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(utf-8-validate@6.0.6)(zod@3.25.75)
       '@coinbase/wallet-sdk': 4.3.0
@@ -16822,8 +16847,8 @@ snapshots:
       x402: 0.7.0(@react-native-async-storage/async-storage@3.0.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(@solana/sysvars@5.5.1(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.9.3))(@tanstack/query-core@5.81.5)(@tanstack/react-query@5.81.5(react@19.2.0))(@types/react@19.2.14)(bufferutil@4.1.0)(expo-web-browser@55.0.10(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)))(fastestsmallesttextencoderdecoder@1.0.22)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)(typescript@5.9.3)(utf-8-validate@6.0.6)(ws@8.18.3(bufferutil@4.1.0)(utf-8-validate@6.0.6))
       zod: 3.25.75
     optionalDependencies:
-      '@aws-sdk/client-lambda': 3.1019.0
-      '@aws-sdk/credential-providers': 3.1019.0
+      '@aws-sdk/client-lambda': 3.1020.0
+      '@aws-sdk/credential-providers': 3.1020.0
       '@coinbase/wallet-mobile-sdk': 1.1.2(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       '@mobile-wallet-protocol/client': 1.0.0(@react-native-async-storage/async-storage@3.0.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(expo-web-browser@55.0.10(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)))(expo@55.0.9)(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       '@react-native-async-storage/async-storage': 3.0.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
@@ -16834,7 +16859,7 @@ snapshots:
       react-native: 0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6)
       react-native-aes-gcm-crypto: 0.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       react-native-passkey: 3.3.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
-      react-native-quick-crypto: 1.0.18(expo@55.0.9)(react-native-nitro-modules@0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native-quick-base64@2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
+      react-native-quick-crypto: 1.0.18(expo-build-properties@55.0.10(expo@55.0.9))(expo@55.0.9)(react-native-nitro-modules@0.35.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native-quick-base64@2.2.2(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0))(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       react-native-svg: 15.15.4(react-native@0.84.1(@babel/core@7.29.0)(@types/react@19.2.14)(bufferutil@4.1.0)(react@19.2.0)(utf-8-validate@6.0.6))(react@19.2.0)
       typescript: 5.9.3
     transitivePeerDependencies:

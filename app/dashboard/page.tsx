@@ -40,11 +40,27 @@ export default function DashboardPage() {
 
     const checkAuth = async () => {
       try {
-        const address = await getConnectedAddress()
+        // Check for wallet connection first
+        let address = await getConnectedAddress()
+        
+        // If no wallet, check for Google auth session
         if (!address) {
-          router.push('/dashboard/login')
-          return
+          const googleSession = localStorage.getItem('cashvault_auth')
+          if (!googleSession) {
+            router.push('/dashboard/login')
+            return
+          }
+          
+          try {
+            const session = JSON.parse(googleSession)
+            // Use email as identifier for Google users
+            address = session.email
+          } catch (e) {
+            router.push('/dashboard/login')
+            return
+          }
         }
+        
         if (isMounted) {
           setWalletAddress(address)
           // Initial data fetch
