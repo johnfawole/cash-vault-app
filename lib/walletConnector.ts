@@ -1,9 +1,7 @@
-import { ethers } from 'ethers'
-
 export interface WalletConnectionResult {
   address: string
-  provider: ethers.BrowserProvider
-  signer: ethers.Signer
+  provider: any
+  signer: any
 }
 
 /**
@@ -14,6 +12,9 @@ export interface WalletConnectionResult {
  *         Second call after redirect will work with injected provider
  */
 export async function connectWallet(): Promise<WalletConnectionResult> {
+  // Dynamically import ethers only when needed
+  const { ethers } = await import('ethers')
+  
   // Check if we're on mobile
   const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
 
