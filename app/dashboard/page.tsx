@@ -7,7 +7,8 @@ import { Button } from '@/components/ui/button'
 import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
-import { getConnectedAddress, onAccountsChanged } from '@/lib/walletConnector'
+import { getAuthIdentifier } from '@/lib/authCheck'
+import { onAccountsChanged } from '@/lib/walletConnector'
 import { getUserDCAPlans, calculateHoldings, type DCAPlan } from '@/app/actions/dashboard'
 
 const COLORS = ['#c4fa6b', '#6fa6ff', '#ff6b9d', '#ff8c42', '#a78bfa', '#f472b6']
@@ -40,20 +41,23 @@ export default function DashboardPage() {
 
     const checkAuth = async () => {
       try {
-        const address = await getConnectedAddress()
-        if (!address) {
+        // Check for both wallet and Google auth
+        const identifier = await getAuthIdentifier()
+        
+        if (!identifier) {
           router.push('/dashboard/login')
           return
         }
+        
         if (isMounted) {
-          setWalletAddress(address)
+          setWalletAddress(identifier)
           // Initial data fetch
-          await refreshData(address)
+          await refreshData(identifier)
           
           // Set up periodic refresh every 5 seconds
           refreshInterval = setInterval(() => {
             if (isMounted) {
-              refreshData(address)
+              refreshData(identifier)
             }
           }, 5000)
         }
