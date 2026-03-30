@@ -207,7 +207,7 @@ export async function upsertGoogleUser(
 /**
  * Store Google auth session in localStorage
  */
-export function setGoogleAuthSession(googleId: string, email: string, name: string) {
+export async function setGoogleAuthSession(googleId: string, email: string, name: string) {
   const session = {
     type: 'google',
     googleId,
