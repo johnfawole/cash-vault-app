@@ -115,7 +115,7 @@ export default function LoginPage() {
       }
 
       // Store auth session
-      setGoogleAuthSession(response.sub, response.email, response.name)
+      await setGoogleAuthSession(response.sub, response.email, response.name)
 
       // Redirect to dashboard
       router.push('/dashboard')
