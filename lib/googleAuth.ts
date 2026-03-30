@@ -46,28 +46,48 @@ export function initializeGoogleSignIn(
     throw new Error('Google Sign-In script not loaded')
   }
 
-  window.google.accounts.id.initialize({
-    client_id: clientId,
-    callback: (response: any) => {
-      if (response.credential) {
-        // Decode JWT to get user info
-        const decoded = JSON.parse(atob(response.credential.split('.')[1]))
-        onSuccess({
-          email: decoded.email,
-          name: decoded.name,
-          picture: decoded.picture,
-          sub: decoded.sub,
+  // Wait for the element to exist
+  const checkElement = setInterval(() => {
+    const element = document.getElementById(elementId)
+    if (element) {
+      clearInterval(checkElement)
+      
+      try {
+        window.google.accounts.id.initialize({
+          client_id: clientId,
+          callback: (response: any) => {
+            console.log('[v0] Google Sign-In callback received')
+            if (response.credential) {
+              // Decode JWT to get user info
+              const decoded = JSON.parse(atob(response.credential.split('.')[1]))
+              console.log('[v0] Decoded user:', decoded.email)
+              onSuccess({
+                email: decoded.email,
+                name: decoded.name,
+                picture: decoded.picture,
+                sub: decoded.sub,
+              })
+            }
+          },
+          error_callback: onError,
         })
-      }
-    },
-    error_callback: onError,
-  })
 
-  window.google.accounts.id.renderButton(document.getElementById(elementId), {
-    theme: 'outline',
-    size: 'large',
-    width: '100%',
-  })
+        console.log('[v0] Rendering Google Sign-In button...')
+        window.google.accounts.id.renderButton(element, {
+          theme: 'outline',
+          size: 'large',
+          width: '100%',
+        })
+        console.log('[v0] Button rendered successfully')
+      } catch (err) {
+        console.error('[v0] Error initializing Google Sign-In:', err)
+        onError()
+      }
+    }
+  }, 100)
+
+  // Timeout after 5 seconds
+  setTimeout(() => clearInterval(checkElement), 5000)
 }
 
 /**
