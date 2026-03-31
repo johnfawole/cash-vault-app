@@ -214,7 +214,7 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
 export async function uploadBankStatement(fileName: string, fileContent: string, isPDF: boolean = false) {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Get authenticated user email from auth session (optional)
     const sessionCookie = cookieStore.get('cashvault_session')
@@ -275,7 +275,7 @@ export async function uploadBankStatement(fileName: string, fileContent: string,
 export async function getUserBankStatements() {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const sessionCookie = cookieStore.get('cashvault_session')
     
@@ -305,7 +305,7 @@ export async function getUserBankStatements() {
 export async function getCategorySpending(statementId?: string) {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const sessionCookie = cookieStore.get('cashvault_session')
     
@@ -353,7 +353,7 @@ export async function getCategorySpending(statementId?: string) {
 export async function getBankTransactions(statementId: string) {
   try {
     const cookieStore = await cookies()
-    const supabase = createClient()
+    const supabase = await createClient()
 
     const sessionCookie = cookieStore.get('cashvault_session')
     if (!sessionCookie) {
