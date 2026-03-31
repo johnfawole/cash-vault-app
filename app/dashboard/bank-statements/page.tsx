@@ -47,8 +47,11 @@ export default function BankStatementsPage() {
       return
     }
 
-    if (!file.name.endsWith('.csv')) {
-      setError('Please upload a CSV file')
+    const isCSV = file.name.endsWith('.csv')
+    const isPDF = file.name.endsWith('.pdf')
+
+    if (!isCSV && !isPDF) {
+      setError('Please upload a CSV or PDF file')
       return
     }
 
@@ -57,7 +60,17 @@ export default function BankStatementsPage() {
     setSuccess(null)
 
     try {
-      const content = await file.text()
+      let content: string | Buffer
+      
+      if (isPDF) {
+        // For PDF, we need to read as ArrayBuffer
+        const arrayBuffer = await file.arrayBuffer()
+        content = Buffer.from(arrayBuffer)
+      } else {
+        // For CSV, read as text
+        content = await file.text()
+      }
+      
       const result = await uploadBankStatement(file.name, content)
       
       setSuccess(`Successfully uploaded ${result.transactionCount} transactions`)
@@ -95,7 +108,7 @@ export default function BankStatementsPage() {
           </Link>
           <h1 className="text-4xl font-bold mb-2">Bank Statements</h1>
           <p className="text-muted-foreground">
-            Upload your bank statement CSV to visualize spending by category
+            Upload your bank statement CSV or PDF to visualize spending by category
           </p>
         </div>
 
@@ -104,7 +117,7 @@ export default function BankStatementsPage() {
           <CardHeader>
             <CardTitle>Upload Bank Statement</CardTitle>
             <CardDescription>
-              Upload a CSV file with columns: Date, Description, Amount
+              Upload a CSV or PDF file with transaction data
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -114,11 +127,11 @@ export default function BankStatementsPage() {
             >
               <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
               <p className="font-medium mb-1">Click to upload or drag and drop</p>
-              <p className="text-sm text-muted-foreground mb-4">CSV files up to 10MB</p>
+              <p className="text-sm text-muted-foreground mb-4">CSV or PDF files up to 10MB</p>
               <input
                 ref={fileInputRef}
                 type="file"
-                accept=".csv"
+                accept=".csv,.pdf"
                 onChange={handleFileUpload}
                 disabled={isLoading}
                 className="hidden"

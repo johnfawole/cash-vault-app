@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { cookies } from 'next/headers'
+import pdfParse from 'pdf-parse'
 
 interface BankTransaction {
   date: string
@@ -85,7 +86,62 @@ function parseCSVContent(content: string): BankTransaction[] {
   return transactions
 }
 
-export async function uploadBankStatement(fileName: string, csvContent: string) {
+async function parsePDFContent(pdfBuffer: Buffer): Promise<BankTransaction[]> {
+  try {
+    const data = await pdfParse(pdfBuffer)
+    const text = data.text
+    
+    // Split text into lines and find transaction data
+    const lines = text.split('\n').map(line => line.trim())
+    const transactions: BankTransaction[] = []
+
+    // PDF typically has header like "Date/Time | Money In | Money Out | Category | Description | Balance"
+    // We need to identify and parse transaction rows
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i]
+      
+      // Skip empty lines and headers
+      if (!line || line.includes('Date') || line.includes('Money')) continue
+      
+      // Try to parse as transaction - look for patterns with dates and amounts
+      // Format could be: "2024-01-15 | | 150.00 | Shopping | Amazon Purchase | 2850.00"
+      const parts = line.split('|').map(p => p.trim())
+      
+      if (parts.length >= 4) {
+        const dateStr = parts[0]
+        const moneyIn = parts.length > 1 ? parts[1] : ''
+        const moneyOut = parts.length > 2 ? parts[2] : ''
+        const category = parts.length > 3 ? parts[3] : ''
+        const description = parts.length > 4 ? parts[4] : ''
+        
+        // Validate we have a date and amount
+        if (dateStr && (moneyIn || moneyOut) && description) {
+          const amount = parseFloat(moneyOut || moneyIn)
+          
+          if (!isNaN(amount) && amount > 0) {
+            transactions.push({
+              date: dateStr,
+              description: description,
+              amount: amount,
+              category: category || categorizeTransaction(description)
+            })
+          }
+        }
+      }
+    }
+
+    if (transactions.length === 0) {
+      throw new Error('No valid transactions found in PDF')
+    }
+
+    return transactions
+  } catch (error) {
+    console.error('[v0] PDF parsing error:', error)
+    throw new Error('Failed to parse PDF: ' + (error instanceof Error ? error.message : 'Unknown error'))
+  }
+}
+
+export async function uploadBankStatement(fileName: string, fileContent: string | Buffer) {
   try {
     const cookieStore = await cookies()
     const supabase = createClient()
@@ -99,8 +155,20 @@ export async function uploadBankStatement(fileName: string, csvContent: string) 
     const session = JSON.parse(sessionCookie.value)
     const userEmail = session.email
 
-    // Parse transactions
-    const transactions = parseCSVContent(csvContent)
+    // Determine file type and parse accordingly
+    let transactions: BankTransaction[] = []
+    
+    if (fileName.endsWith('.pdf')) {
+      // Convert string to Buffer if needed
+      const pdfBuffer = typeof fileContent === 'string' 
+        ? Buffer.from(fileContent, 'binary') 
+        : fileContent
+      transactions = await parsePDFContent(pdfBuffer)
+    } else {
+      // Assume CSV
+      const csvContent = typeof fileContent === 'string' ? fileContent : fileContent.toString()
+      transactions = parseCSVContent(csvContent)
+    }
 
     // Insert bank statement
     const { data: statementData, error: statementError } = await supabase
