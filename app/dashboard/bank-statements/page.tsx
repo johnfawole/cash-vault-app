@@ -227,6 +227,7 @@ export default function BankStatementsPage() {
               </CardContent>
             </Card>
           )}
+        </div>
       </div>
     </main>
   )
