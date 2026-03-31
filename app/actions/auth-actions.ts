@@ -204,10 +204,19 @@ export async function upsertGoogleUser(
   }
 }
 
-/**
- * Store Google auth session in localStorage
- */
-export async function setGoogleAuthSession(googleId: string, email: string, name: string) {
+export async function getAuthIdentifier(): Promise<string | null> {
+  try {
+    const session = await getAuthSession()
+    if (session?.email) {
+      return session.email
+    }
+    return null
+  } catch (error) {
+    console.error("[v0] Error getting auth identifier:", error)
+    return null
+  }
+}
+  const cookieStore = await cookies()
   const session = {
     type: 'google',
     googleId,
@@ -215,5 +224,11 @@ export async function setGoogleAuthSession(googleId: string, email: string, name
     name,
     timestamp: new Date().toISOString(),
   }
-  localStorage.setItem('cashvault_auth', JSON.stringify(session))
+  // Create a session cookie that expires in 30 days
+  cookieStore.set("cashvault_session", JSON.stringify(session), {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  })
 }

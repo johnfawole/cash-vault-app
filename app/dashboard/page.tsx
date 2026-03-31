@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { LogOut, Menu } from 'lucide-react'
 import Link from 'next/link'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
-import { getAuthIdentifier } from '@/lib/authCheck'
+import { getAuthIdentifier } from '@/app/actions/auth-actions'
 import { onAccountsChanged } from '@/lib/walletConnector'
 import { getUserDCAPlans, calculateHoldings, type DCAPlan } from '@/app/actions/dashboard'
 
