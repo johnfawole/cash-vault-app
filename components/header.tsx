@@ -114,12 +114,6 @@ export function Header() {
             >
               FAQ
             </a>
-            <Link
-              href="/dashboard/bank-statements"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Bank Statement Analyzer
-            </Link>
           </nav>
 
           <div className="flex items-center gap-3">
