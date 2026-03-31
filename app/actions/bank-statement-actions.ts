@@ -94,67 +94,114 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
     const text = data.text
     
     console.log('[v0] PDF extracted text length:', text.length)
-    console.log('[v0] PDF text preview:', text.substring(0, 800))
     
-    // Split text into lines and filter empty ones
-    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
     const transactions: BankTransaction[] = []
-
-    // Look for transaction patterns in PDF
-    // Bank statements typically have: Date | Amount | Description or similar
+    
+    // Split by lines but preserve structure
+    const lines = text.split('\n').map(line => line.trim())
+    
+    // Remove header row
+    let dataStartIndex = 0
     for (let i = 0; i < lines.length; i++) {
+      if (lines[i].includes('Date') && lines[i].includes('Money')) {
+        dataStartIndex = i + 1
+        break
+      }
+    }
+    
+    // Parse transactions - look for date patterns (DD/MM/YY)
+    let i = dataStartIndex
+    while (i < lines.length) {
       const line = lines[i]
       
-      // Skip headers and metadata lines
-      if (line.includes('Date') || line.includes('Statement') || line.includes('Account') || 
-          line.includes('Balance') || line.includes('Page') || line.length < 10) continue
+      // Look for date pattern (DD/MM/YY)
+      const dateMatch = line.match(/^(\d{1,2}\/\d{1,2}\/\d{2})/)
+      if (!dateMatch) {
+        i++
+        continue
+      }
       
-      // Look for date patterns (multiple formats)
-      const dateMatch = line.match(/(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}|\d{4}[-\/]\d{1,2}[-\/]\d{1,2}|\d{1,2}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s\d{2,4})/i)
-      if (!dateMatch) continue
+      const transactionDate = dateMatch[1]
       
-      // Look for currency amounts (patterns like 1,234.56 or 1234.56 or £1,234.56)
-      const amountMatches = line.match(/[\$£€]?\s*(\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})?)/g)
-      if (!amountMatches || amountMatches.length === 0) continue
+      // Next line typically contains time HH:MM:SS and amount
+      const timeAndAmount = lines[i + 1]
+      if (!timeAndAmount) break
       
-      // Extract the first (or largest) amount as the transaction amount
-      let amount = 0
-      for (const match of amountMatches) {
-        const num = parseFloat(match.replace(/[$£€,\s]/g, ''))
-        if (!isNaN(num) && num > amount) {
-          amount = num
+      console.log('[v0] Line:', line)
+      console.log('[v0] Time/Amount line:', timeAndAmount)
+      
+      // Extract amount from the line (look for ₦ or numeric values with commas)
+      const amountMatch = timeAndAmount.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
+      if (!amountMatch) {
+        i++
+        continue
+      }
+      
+      const amount = parseFloat(amountMatch[1].replace(/,/g, ''))
+      if (isNaN(amount) || amount === 0) {
+        i++
+        continue
+      }
+      
+      // Extract category - usually on next lines
+      let category = ''
+      let description = ''
+      let descriptionLines = []
+      let j = i + 2
+      
+      // Collect the next few lines as category and description
+      while (j < lines.length && j < i + 8) {
+        const currentLine = lines[j]
+        
+        // Stop if we hit another date (start of next transaction)
+        if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/)) break
+        
+        // Stop if we hit a balance number
+        if (currentLine.match(/^₦\s*[\d,]+(?:\.\d{2})?$/)) {
+          // This is the balance, we can extract category from previous content
+          break
         }
+        
+        if (currentLine.length > 0) {
+          descriptionLines.push(currentLine)
+        }
+        j++
       }
       
-      if (amount === 0 || isNaN(amount)) continue
+      // First line is usually category, rest is description
+      if (descriptionLines.length > 0) {
+        category = descriptionLines[0]
+        description = descriptionLines.slice(1).join(' ') || descriptionLines[0]
+      }
       
-      // Extract description by removing date and amounts from the line
-      let description = line
-        .replace(dateMatch[0], '')
-        .replace(/[\$£€]?\s*[\d,.\s]+/g, ' ')
+      // Clean up description
+      description = description
+        .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '') // Remove amounts
+        .replace(/\s+/g, ' ')
         .trim()
+        .substring(0, 100)
       
-      // Clean up description - remove extra spaces
-      description = description.replace(/\s+/g, ' ').substring(0, 100).trim()
-      
-      if (description.length < 2) {
-        description = 'Transaction'
+      if (description.length === 0) {
+        description = category || 'Transaction'
       }
       
-      console.log('[v0] Found transaction - Date:', dateMatch[0], 'Amount:', amount, 'Desc:', description)
+      console.log('[v0] Parsed - Date:', transactionDate, 'Amount:', amount, 'Category:', category, 'Desc:', description)
       
       transactions.push({
-        date: dateMatch[0],
+        date: transactionDate,
         description: description,
         amount: Math.abs(amount),
         category: categorizeTransaction(description)
       })
+      
+      // Move to next transaction (skip the lines we processed)
+      i = j
     }
 
     console.log('[v0] Total transactions extracted from PDF:', transactions.length)
     
     if (transactions.length === 0) {
-      throw new Error('No valid transactions found in PDF. Could not parse date/amount patterns.')
+      throw new Error('No valid transactions found in PDF')
     }
 
     return transactions
