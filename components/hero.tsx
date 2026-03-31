@@ -49,11 +49,7 @@ export function Hero() {
               </div>
             </div>
 
-            <div className="mt-12 text-center">
-              <p className="text-sm text-muted-foreground mb-4">
-                45,000+ finance teams have saved millions of hours with CashVault.
-              </p>
-            </div>
+
           </div>
         </div>
       </section>
