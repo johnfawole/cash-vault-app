@@ -1,7 +1,5 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { cookies } from 'next/headers'
 import pdfParse from 'pdf-parse'
 
 interface BankTransaction {
@@ -93,8 +91,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
     const data = await pdfParse(pdfBuffer)
     const text = data.text
     
-    console.log('[v0] PDF extracted text length:', text.length)
-    
     const transactions: BankTransaction[] = []
     
     // Split by lines but preserve structure
@@ -127,9 +123,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       const timeAndAmount = lines[i + 1]
       if (!timeAndAmount) break
       
-      console.log('[v0] Line:', line)
-      console.log('[v0] Time/Amount line:', timeAndAmount)
-      
       // Extract amount from the line (look for ₦ or numeric values with commas)
       const amountMatch = timeAndAmount.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
       if (!amountMatch) {
@@ -144,7 +137,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       }
       
       // Extract category - usually on next lines
-      let category = ''
       let description = ''
       let descriptionLines = []
       let j = i + 2
@@ -157,10 +149,7 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
         if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/)) break
         
         // Stop if we hit a balance number
-        if (currentLine.match(/^₦\s*[\d,]+(?:\.\d{2})?$/)) {
-          // This is the balance, we can extract category from previous content
-          break
-        }
+        if (currentLine.match(/^₦\s*[\d,]+(?:\.\d{2})?$/)) break
         
         if (currentLine.length > 0) {
           descriptionLines.push(currentLine)
@@ -168,10 +157,9 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
         j++
       }
       
-      // First line is usually category, rest is description
+      // Combine description lines
       if (descriptionLines.length > 0) {
-        category = descriptionLines[0]
-        description = descriptionLines.slice(1).join(' ') || descriptionLines[0]
+        description = descriptionLines.join(' ')
       }
       
       // Clean up description
@@ -182,10 +170,8 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
         .substring(0, 100)
       
       if (description.length === 0) {
-        description = category || 'Transaction'
+        description = 'Transaction'
       }
-      
-      console.log('[v0] Parsed - Date:', transactionDate, 'Amount:', amount, 'Category:', category, 'Desc:', description)
       
       transactions.push({
         date: transactionDate,
@@ -197,8 +183,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       // Move to next transaction (skip the lines we processed)
       i = j
     }
-
-    console.log('[v0] Total transactions extracted from PDF:', transactions.length)
     
     if (transactions.length === 0) {
       throw new Error('No valid transactions found in PDF')
@@ -224,8 +208,7 @@ export async function uploadBankStatement(fileName: string, fileContent: string,
       transactions = parseCSVContent(fileContent)
     }
 
-    // Return parsed transactions directly (store in memory on frontend)
-    // Database storage can be added later when schema cache is refreshed
+    // Return parsed transactions for visualization
     return {
       success: true,
       transactionCount: transactions.length,
@@ -234,113 +217,6 @@ export async function uploadBankStatement(fileName: string, fileContent: string,
     }
   } catch (error) {
     console.error('[v0] Bank statement upload error:', error)
-    throw error
-  }
-}
-
-export async function getUserBankStatements() {
-  try {
-    const cookieStore = await cookies()
-    const supabase = await createClient()
-
-    const sessionCookie = cookieStore.get('cashvault_session')
-    
-    if (!sessionCookie) {
-      // Return empty data if not authenticated
-      return []
-    }
-
-    const session = JSON.parse(sessionCookie.value)
-    const userEmail = session.email
-
-    const { data, error } = await supabase
-      .from('bank_statements')
-      .select('*')
-      .eq('user_email', userEmail)
-      .order('created_at', { ascending: false })
-
-    if (error) throw error
-
-    return data || []
-  } catch (error) {
-    console.error('[v0] Error fetching bank statements:', error)
-    throw error
-  }
-}
-
-export async function getCategorySpending(statementId?: string) {
-  try {
-    const cookieStore = await cookies()
-    const supabase = await createClient()
-
-    const sessionCookie = cookieStore.get('cashvault_session')
-    
-    if (!sessionCookie) {
-      // Return empty data if not authenticated
-      return []
-    }
-
-    const session = JSON.parse(sessionCookie.value)
-    const userEmail = session.email
-
-    let query = supabase
-      .from('bank_transactions')
-      .select('category, amount')
-      .eq('user_email', userEmail)
-
-    if (statementId) {
-      query = query.eq('statement_id', statementId)
-    }
-
-    const { data, error } = await query
-
-    if (error) throw error
-
-    // Aggregate by category
-    const categoryTotals: Record<string, number> = {}
-    
-    data?.forEach(transaction => {
-      if (!categoryTotals[transaction.category]) {
-        categoryTotals[transaction.category] = 0
-      }
-      categoryTotals[transaction.category] += transaction.amount
-    })
-
-    return Object.entries(categoryTotals).map(([name, value]) => ({
-      name,
-      value: parseFloat(value.toFixed(2))
-    }))
-  } catch (error) {
-    console.error('[v0] Error getting category spending:', error)
-    throw error
-  }
-}
-
-export async function getBankTransactions(statementId: string) {
-  try {
-    const cookieStore = await cookies()
-    const supabase = await createClient()
-
-    const sessionCookie = cookieStore.get('cashvault_session')
-    if (!sessionCookie) {
-      throw new Error('Not authenticated')
-    }
-
-    const session = JSON.parse(sessionCookie.value)
-    const userEmail = session.email
-
-    const { data, error } = await supabase
-      .from('bank_transactions')
-      .select('*')
-      .eq('statement_id', statementId)
-      .eq('user_email', userEmail)
-      .order('date', { ascending: false })
-
-    if (error) throw error
-
-    return data || []
-  } catch (error) {
-    console.error('[v0] Error fetching transactions:', error)
     throw error
   }
 }

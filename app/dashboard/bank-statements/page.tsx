@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
 import { Upload, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
-import { uploadBankStatement, getCategorySpending, getUserBankStatements } from '@/app/actions/bank-statement-actions'
+import { uploadBankStatement } from '@/app/actions/bank-statement-actions'
 
 const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#6366f1']
 
@@ -16,27 +15,7 @@ export default function BankStatementsPage() {
   const [error, setError] = useState<string | null>(null)
   const [success, setSuccess] = useState<string | null>(null)
   const [categoryData, setCategoryData] = useState<Array<{name: string, value: number}>>([])
-  const [statements, setStatements] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const router = useRouter()
-
-  // Load initial data
-  const loadData = async () => {
-    try {
-      const spending = await getCategorySpending()
-      setCategoryData(spending)
-      
-      const statements = await getUserBankStatements()
-      setStatements(statements)
-    } catch (err) {
-      console.error('[v0] Error loading data:', err)
-    }
-  }
-
-  // Load on mount
-  useEffect(() => {
-    loadData()
-  }, [])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
