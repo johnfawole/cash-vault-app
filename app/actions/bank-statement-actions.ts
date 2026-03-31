@@ -93,6 +93,8 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
     const transactions: BankTransaction[] = []
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
     
+    console.log('[v0] Total lines in PDF:', lines.length)
+    
     // Find where actual transaction data starts (after header with Date/Money columns)
     let dataStartIndex = 0
     for (let i = 0; i < lines.length; i++) {
@@ -101,6 +103,8 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
         break
       }
     }
+    
+    console.log('[v0] Data starts at line:', dataStartIndex)
     
     let i = dataStartIndex
     while (i < lines.length) {
@@ -112,51 +116,58 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       }
       
       const transactionDate = dateMatch[1]
+      console.log('[v0] Found date:', transactionDate)
       i++
       
-      // Collect description and amount from following lines
+      // Collect ALL following lines until we find an amount OR hit another date that has an amount after it
       let amount = 0
       let descriptionLines: string[] = []
       let foundAmount = false
-      let linesChecked = 0
-      const maxLines = 20 // Check up to 20 lines for amount
+      let tempI = i
       
-      while (i < lines.length && linesChecked < maxLines && !foundAmount) {
-        const currentLine = lines[i]
-        
-        // Stop if we hit another date (next transaction) BUT keep looking for amount in current batch
-        if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/) && descriptionLines.length > 0) {
-          break
-        }
-        
-        // Look for amount with ₦ symbol
+      // First pass: look for amount in next 50 lines
+      while (tempI < lines.length && tempI < i + 50) {
+        const currentLine = lines[tempI]
         const amountMatch = currentLine.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
+        
         if (amountMatch) {
           amount = parseFloat(amountMatch[1].replace(/,/g, ''))
           foundAmount = true
-          i++
+          console.log('[v0] Found amount:', amount, 'at line', tempI)
           break
         }
         
-        // Collect lines that could be description (skip time-only lines)
-        if (currentLine.length > 2 && !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/)) {
-          // Skip pure time lines
-          descriptionLines.push(currentLine)
-        }
-        
-        i++
-        linesChecked++
+        tempI++
       }
       
-      // Only create transaction if we found both amount and some description
-      if (foundAmount && amount > 0 && descriptionLines.length > 0) {
+      // If we found an amount, now collect the description
+      if (foundAmount && amount > 0) {
+        // Collect description lines between date and amount
+        while (i < tempI) {
+          const currentLine = lines[i]
+          
+          // Skip time-only lines and pure numbers
+          if (currentLine.length > 2 && 
+              !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/) &&
+              !currentLine.match(/^[\d,]+(?:\.\d{2})?$/)) {
+            descriptionLines.push(currentLine)
+          }
+          
+          i++
+        }
+        
+        // Skip the amount line
+        i = tempI + 1
+        
         let description = descriptionLines.join(' ')
           .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '') // Remove any amounts
           .replace(/\s+/g, ' ')
           .trim()
           .substring(0, 150)
         
-        if (!description) description = 'Transaction'
+        if (description.length === 0) description = 'Transfer'
+        
+        console.log('[v0] Transaction - Date:', transactionDate, 'Desc:', description, 'Amount:', amount)
         
         transactions.push({
           date: transactionDate,
@@ -164,8 +175,13 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
           amount: Math.abs(amount),
           category: categorizeTransaction(description)
         })
+      } else {
+        // No amount found, move to next line
+        i++
       }
     }
+    
+    console.log('[v0] Total transactions extracted:', transactions.length)
     
     if (transactions.length === 0) {
       throw new Error('No valid transactions found in PDF')
