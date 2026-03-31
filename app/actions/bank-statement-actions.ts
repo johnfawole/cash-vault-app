@@ -93,47 +93,68 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
     const data = await pdfParse(pdfBuffer)
     const text = data.text
     
-    // Split text into lines and find transaction data
-    const lines = text.split('\n').map(line => line.trim())
+    console.log('[v0] PDF extracted text length:', text.length)
+    console.log('[v0] PDF text preview:', text.substring(0, 800))
+    
+    // Split text into lines and filter empty ones
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
     const transactions: BankTransaction[] = []
 
-    // PDF typically has header like "Date/Time | Money In | Money Out | Category | Description | Balance"
-    // We need to identify and parse transaction rows
+    // Look for transaction patterns in PDF
+    // Bank statements typically have: Date | Amount | Description or similar
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i]
       
-      // Skip empty lines and headers
-      if (!line || line.includes('Date') || line.includes('Money')) continue
+      // Skip headers and metadata lines
+      if (line.includes('Date') || line.includes('Statement') || line.includes('Account') || 
+          line.includes('Balance') || line.includes('Page') || line.length < 10) continue
       
-      // Try to parse as transaction - look for patterns with dates and amounts
-      // Format could be: "2024-01-15 | | 150.00 | Shopping | Amazon Purchase | 2850.00"
-      const parts = line.split('|').map(p => p.trim())
+      // Look for date patterns (multiple formats)
+      const dateMatch = line.match(/(\d{1,2}[-\/]\d{1,2}[-\/]\d{2,4}|\d{4}[-\/]\d{1,2}[-\/]\d{1,2}|\d{1,2}\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s\d{2,4})/i)
+      if (!dateMatch) continue
       
-      if (parts.length >= 4) {
-        const dateStr = parts[0]
-        const moneyIn = parts.length > 1 ? parts[1] : ''
-        const moneyOut = parts.length > 2 ? parts[2] : ''
-        const category = parts.length > 3 ? parts[3] : ''
-        const description = parts.length > 4 ? parts[4] : ''
-        
-        // Validate we have a date and amount
-        if (dateStr && (moneyIn || moneyOut) && description) {
-          const amount = parseFloat(moneyOut || moneyIn)
-          
-          if (!isNaN(amount) && amount > 0) {
-            transactions.push({
-              date: dateStr,
-              description: description,
-              amount: amount,
-              category: category || categorizeTransaction(description)
-            })
-          }
+      // Look for currency amounts (patterns like 1,234.56 or 1234.56 or £1,234.56)
+      const amountMatches = line.match(/[\$£€]?\s*(\d{1,3}(?:[,\s]\d{3})*(?:\.\d{2})?)/g)
+      if (!amountMatches || amountMatches.length === 0) continue
+      
+      // Extract the first (or largest) amount as the transaction amount
+      let amount = 0
+      for (const match of amountMatches) {
+        const num = parseFloat(match.replace(/[$£€,\s]/g, ''))
+        if (!isNaN(num) && num > amount) {
+          amount = num
         }
       }
+      
+      if (amount === 0 || isNaN(amount)) continue
+      
+      // Extract description by removing date and amounts from the line
+      let description = line
+        .replace(dateMatch[0], '')
+        .replace(/[\$£€]?\s*[\d,.\s]+/g, ' ')
+        .trim()
+      
+      // Clean up description - remove extra spaces
+      description = description.replace(/\s+/g, ' ').substring(0, 100).trim()
+      
+      if (description.length < 2) {
+        description = 'Transaction'
+      }
+      
+      console.log('[v0] Found transaction - Date:', dateMatch[0], 'Amount:', amount, 'Desc:', description)
+      
+      transactions.push({
+        date: dateMatch[0],
+        description: description,
+        amount: Math.abs(amount),
+        category: categorizeTransaction(description)
+      })
     }
 
+    console.log('[v0] Total transactions extracted from PDF:', transactions.length)
+    
     if (transactions.length === 0) {
-      throw new Error('No valid transactions found in PDF')
+      throw new Error('No valid transactions found in PDF. Could not parse date/amount patterns.')
     }
 
     return transactions
