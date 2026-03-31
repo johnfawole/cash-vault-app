@@ -93,8 +93,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
     const transactions: BankTransaction[] = []
     const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
     
-    console.log('[v0] Total lines in PDF:', lines.length)
-    
     // Find where actual transaction data starts (after header with Date/Money columns)
     let dataStartIndex = 0
     for (let i = 0; i < lines.length; i++) {
@@ -103,8 +101,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
         break
       }
     }
-    
-    console.log('[v0] Data starts at line:', dataStartIndex)
     
     let i = dataStartIndex
     while (i < lines.length) {
@@ -116,72 +112,97 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       }
       
       const transactionDate = dateMatch[1]
-      console.log('[v0] Found date:', transactionDate)
       i++
       
-      // Collect ALL following lines until we find an amount OR hit another date that has an amount after it
-      let amount = 0
+      // Collect lines until we find amounts
+      let moneyIn = 0
+      let moneyOut = 0
       let descriptionLines: string[] = []
-      let foundAmount = false
+      let foundTransactionData = false
       let tempI = i
+      let maxCheckLines = 50
       
-      // First pass: look for amount in next 50 lines
-      while (tempI < lines.length && tempI < i + 50) {
+      // Scan next lines to find Money In/Out or single amount
+      while (tempI < lines.length && tempI < i + maxCheckLines) {
         const currentLine = lines[tempI]
-        const amountMatch = currentLine.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
         
-        if (amountMatch) {
-          amount = parseFloat(amountMatch[1].replace(/,/g, ''))
-          foundAmount = true
-          console.log('[v0] Found amount:', amount, 'at line', tempI)
+        // Stop if we hit another date
+        if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/) && tempI > i) break
+        
+        // Look for two columns of amounts (Money In | Money Out format)
+        const twoAmountsMatch = currentLine.match(/₦\s*([\d,]+(?:\.\d{2})?)\s+[\s|]*₦\s*([\d,]+(?:\.\d{2})?)/)
+        if (twoAmountsMatch) {
+          moneyIn = parseFloat(twoAmountsMatch[1].replace(/,/g, ''))
+          moneyOut = parseFloat(twoAmountsMatch[2].replace(/,/g, ''))
+          foundTransactionData = true
           break
+        }
+        
+        // Look for single amount with ₦ symbol
+        const singleAmountMatch = currentLine.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
+        if (singleAmountMatch && !foundTransactionData) {
+          const amount = parseFloat(singleAmountMatch[1].replace(/,/g, ''))
+          // Assume single column is money out (expense)
+          moneyOut = amount
+          foundTransactionData = true
+          break
+        }
+        
+        // Collect potential description lines (anything that's not just time or pure numbers)
+        if (currentLine.length > 2 && 
+            !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/) &&
+            !currentLine.match(/^[\d,]+(?:\.\d{2})?$/) &&
+            !currentLine.match(/^₦/)) {
+          descriptionLines.push(currentLine)
         }
         
         tempI++
       }
       
-      // If we found an amount, now collect the description
-      if (foundAmount && amount > 0) {
-        // Collect description lines between date and amount
-        while (i < tempI) {
-          const currentLine = lines[i]
+      // If we found transaction data, create the transaction
+      if (foundTransactionData && (moneyIn > 0 || moneyOut > 0)) {
+        // Create transaction(s) for money in and money out
+        if (moneyIn > 0) {
+          let description = descriptionLines.join(' ')
+            .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 150)
           
-          // Skip time-only lines and pure numbers
-          if (currentLine.length > 2 && 
-              !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/) &&
-              !currentLine.match(/^[\d,]+(?:\.\d{2})?$/)) {
-            descriptionLines.push(currentLine)
-          }
+          if (!description || description.length < 2) description = 'Received'
           
-          i++
+          transactions.push({
+            date: transactionDate,
+            description: description,
+            amount: moneyIn,
+            category: categorizeTransaction(description),
+            type: 'in'
+          } as any)
         }
         
-        // Skip the amount line
+        if (moneyOut > 0) {
+          let description = descriptionLines.join(' ')
+            .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '')
+            .replace(/\s+/g, ' ')
+            .trim()
+            .substring(0, 150)
+          
+          if (!description || description.length < 2) description = 'Sent'
+          
+          transactions.push({
+            date: transactionDate,
+            description: description,
+            amount: -moneyOut, // Make negative for sent
+            category: categorizeTransaction(description),
+            type: 'out'
+          } as any)
+        }
+        
         i = tempI + 1
-        
-        let description = descriptionLines.join(' ')
-          .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '') // Remove any amounts
-          .replace(/\s+/g, ' ')
-          .trim()
-          .substring(0, 150)
-        
-        if (description.length === 0) description = 'Transfer'
-        
-        console.log('[v0] Transaction - Date:', transactionDate, 'Desc:', description, 'Amount:', amount)
-        
-        transactions.push({
-          date: transactionDate,
-          description: description,
-          amount: Math.abs(amount),
-          category: categorizeTransaction(description)
-        })
       } else {
-        // No amount found, move to next line
         i++
       }
     }
-    
-    console.log('[v0] Total transactions extracted:', transactions.length)
     
     if (transactions.length === 0) {
       throw new Error('No valid transactions found in PDF')
