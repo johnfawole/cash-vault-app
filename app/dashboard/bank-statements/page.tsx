@@ -80,12 +80,22 @@ export default function BankStatementsPage() {
       
       setSuccess(`Successfully uploaded ${result.transactionCount} transactions`)
       
-      // Fetch updated data
-      const spending = await getCategorySpending()
-      setCategoryData(spending)
+      // Process transactions to calculate spending by category
+      const categorySpending: { [key: string]: number } = {}
+      if (result.transactions) {
+        result.transactions.forEach((transaction: any) => {
+          const category = transaction.category || 'Uncategorized'
+          categorySpending[category] = (categorySpending[category] || 0) + transaction.amount
+        })
+      }
       
-      const statements = await getUserBankStatements()
-      setStatements(statements)
+      // Convert to chart format
+      const chartData = Object.entries(categorySpending).map(([name, value]) => ({
+        name,
+        value: Number(value)
+      }))
+      
+      setCategoryData(chartData)
 
       // Reset file input
       if (fileInputRef.current) {

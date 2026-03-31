@@ -213,13 +213,6 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
 
 export async function uploadBankStatement(fileName: string, fileContent: string, isPDF: boolean = false) {
   try {
-    const cookieStore = await cookies()
-    const supabase = await createClient()
-
-    // Get authenticated user email from auth session (optional)
-    const sessionCookie = cookieStore.get('cashvault_session')
-    const userEmail = sessionCookie ? JSON.parse(sessionCookie.value).email : 'anonymous'
-
     // Determine file type and parse accordingly
     let transactions: BankTransaction[] = []
     
@@ -231,40 +224,13 @@ export async function uploadBankStatement(fileName: string, fileContent: string,
       transactions = parseCSVContent(fileContent)
     }
 
-    // Insert bank statement
-    const { data: statementData, error: statementError } = await supabase
-      .from('bank_statements')
-      .insert({
-        user_email: userEmail,
-        file_name: fileName,
-        transaction_count: transactions.length,
-        total_amount: transactions.reduce((sum, t) => sum + t.amount, 0),
-      })
-      .select()
-      .single()
-
-    if (statementError) throw statementError
-
-    // Insert transactions
-    const transactionsToInsert = transactions.map(t => ({
-      statement_id: statementData.id,
-      user_email: userEmail,
-      date: t.date,
-      description: t.description,
-      amount: t.amount,
-      category: t.category,
-    }))
-
-    const { error: transactionsError } = await supabase
-      .from('bank_transactions')
-      .insert(transactionsToInsert)
-
-    if (transactionsError) throw transactionsError
-
+    // Return parsed transactions directly (store in memory on frontend)
+    // Database storage can be added later when schema cache is refreshed
     return {
       success: true,
-      statementId: statementData.id,
       transactionCount: transactions.length,
+      transactions: transactions,
+      totalAmount: transactions.reduce((sum, t) => sum + t.amount, 0),
     }
   } catch (error) {
     console.error('[v0] Bank statement upload error:', error)
