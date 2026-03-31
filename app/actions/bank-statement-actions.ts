@@ -86,17 +86,14 @@ function parseCSVContent(content: string): BankTransaction[] {
 
 async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
   try {
-    // Decode Base64 to Buffer
     const pdfBuffer = Buffer.from(pdfBase64, 'base64')
     const data = await pdfParse(pdfBuffer)
     const text = data.text
     
     const transactions: BankTransaction[] = []
+    const lines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0)
     
-    // Split by lines but preserve structure
-    const lines = text.split('\n').map(line => line.trim())
-    
-    // Remove header row
+    // Find where actual transaction data starts (after header with Date/Money columns)
     let dataStartIndex = 0
     for (let i = 0; i < lines.length; i++) {
       if (lines[i].includes('Date') && lines[i].includes('Money')) {
@@ -105,83 +102,65 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       }
     }
     
-    // Parse transactions - look for date patterns (DD/MM/YY)
     let i = dataStartIndex
     while (i < lines.length) {
-      const line = lines[i]
-      
       // Look for date pattern (DD/MM/YY)
-      const dateMatch = line.match(/^(\d{1,2}\/\d{1,2}\/\d{2})/)
+      const dateMatch = lines[i].match(/^(\d{1,2}\/\d{1,2}\/\d{2})/)
       if (!dateMatch) {
         i++
         continue
       }
       
       const transactionDate = dateMatch[1]
+      i++
       
-      // Next line typically contains time HH:MM:SS and amount
-      const timeAndAmount = lines[i + 1]
-      if (!timeAndAmount) break
+      // Next lines might be time and other info
+      // Keep reading until we find an amount (₦ symbol)
+      let amount = 0
+      let descriptionLines: string[] = []
+      let foundAmount = false
       
-      // Extract amount from the line (look for ₦ or numeric values with commas)
-      const amountMatch = timeAndAmount.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
-      if (!amountMatch) {
-        i++
-        continue
-      }
-      
-      const amount = parseFloat(amountMatch[1].replace(/,/g, ''))
-      if (isNaN(amount) || amount === 0) {
-        i++
-        continue
-      }
-      
-      // Extract category - usually on next lines
-      let description = ''
-      let descriptionLines = []
-      let j = i + 2
-      
-      // Collect the next few lines as category and description
-      while (j < lines.length && j < i + 8) {
-        const currentLine = lines[j]
+      while (i < lines.length && !foundAmount) {
+        const currentLine = lines[i]
         
-        // Stop if we hit another date (start of next transaction)
+        // Stop if we hit another date (next transaction)
         if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/)) break
         
-        // Stop if we hit a balance number
-        if (currentLine.match(/^₦\s*[\d,]+(?:\.\d{2})?$/)) break
+        // Look for amount with ₦ symbol
+        const amountMatch = currentLine.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
+        if (amountMatch) {
+          amount = parseFloat(amountMatch[1].replace(/,/g, ''))
+          foundAmount = true
+          i++
+          break
+        }
         
-        if (currentLine.length > 0) {
+        // Collect non-empty lines as potential description
+        if (currentLine.length > 0 && !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/)) {
+          // Skip time lines (HH:MM:SS format)
           descriptionLines.push(currentLine)
         }
-        j++
+        
+        i++
       }
       
-      // Combine description lines
-      if (descriptionLines.length > 0) {
-        description = descriptionLines.join(' ')
+      // Only create transaction if we found both amount and some description
+      if (foundAmount && amount > 0) {
+        let description = descriptionLines.join(' ')
+          .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '') // Remove any amounts
+          .replace(/\s+/g, ' ')
+          .trim()
+          .substring(0, 150)
+        
+        if (!description) description = 'Transaction'
+        
+        transactions.push({
+          date: transactionDate,
+          description: description,
+          amount: Math.abs(amount),
+          category: categorizeTransaction(description)
+        })
       }
-      
-      // Clean up description
-      description = description
-        .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '') // Remove amounts
-        .replace(/\s+/g, ' ')
-        .trim()
-        .substring(0, 100)
-      
-      if (description.length === 0) {
-        description = 'Transaction'
-      }
-      
-      transactions.push({
-        date: transactionDate,
-        description: description,
-        amount: Math.abs(amount),
-        category: categorizeTransaction(description)
-      })
-      
-      // Move to next transaction (skip the lines we processed)
-      i = j
     }
     
     if (transactions.length === 0) {

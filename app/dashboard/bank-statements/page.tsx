@@ -3,12 +3,10 @@
 import { useState, useRef } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { Upload, ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { uploadBankStatement } from '@/app/actions/bank-statement-actions'
-
-const COLORS = ['#22c55e', '#3b82f6', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#6366f1']
 
 export default function BankStatementsPage() {
   const [isLoading, setIsLoading] = useState(false)
@@ -57,18 +55,35 @@ export default function BankStatementsPage() {
       
       setSuccess(`Successfully uploaded ${result.transactionCount} transactions`)
       
-      const categorySpending: { [key: string]: number } = {}
+      // Group transactions by similar descriptions
+      const groupedTransactions: { [key: string]: number } = {}
       if (result.transactions) {
         result.transactions.forEach((transaction: any) => {
-          const category = transaction.category || 'Uncategorized'
-          categorySpending[category] = (categorySpending[category] || 0) + transaction.amount
+          // Extract key phrase from description (first few words or keywords)
+          let groupKey = transaction.description
+          
+          // Try to find a recognizable pattern/keyword to group by
+          const words = transaction.description.toLowerCase().split(/[\s\/\-]+/)
+          
+          // Look for common transaction type keywords
+          for (const word of words) {
+            if (word.length > 3) {
+              groupKey = word.charAt(0).toUpperCase() + word.slice(1)
+              break
+            }
+          }
+          
+          groupedTransactions[groupKey] = (groupedTransactions[groupKey] || 0) + 1
         })
       }
       
-      const chartData = Object.entries(categorySpending).map(([name, value]) => ({
-        name,
-        value: Number(value)
-      }))
+      // Convert to chart format (count of similar transactions)
+      const chartData = Object.entries(groupedTransactions)
+        .map(([name, count]) => ({
+          name: name.substring(0, 20), // Truncate long names
+          count: count
+        }))
+        .sort((a, b) => b.count - a.count) // Sort by frequency
       
       setCategoryData(chartData)
 
@@ -153,52 +168,40 @@ export default function BankStatementsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {categoryData.length > 0 && (
-            <Card>
+            <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Spending by Category</CardTitle>
+                <CardTitle>Transaction Type Frequency</CardTitle>
                 <CardDescription>
-                  Breakdown of your expenses across categories
+                  Count of similar transactions grouped by description
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={categoryData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={false}
-                      label={(entry) => `${entry.name}: $${entry.value}`}
-                      outerRadius={80}
-                      fill="#8884d8"
-                      dataKey="value"
-                    >
-                      {categoryData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => `$${value.toFixed(2)}`} />
-                    <Legend />
-                  </PieChart>
+                <ResponsiveContainer width="100%" height={400}>
+                  <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="name" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={120}
+                    />
+                    <YAxis label={{ value: 'Number of Transactions', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip />
+                    <Bar dataKey="count" fill="#3b82f6" name="Transaction Count" />
+                  </BarChart>
                 </ResponsiveContainer>
 
                 <div className="mt-8 space-y-3">
-                  <div className="font-semibold text-sm text-muted-foreground">Category Breakdown:</div>
-                  {categoryData.map((item, index) => (
-                    <div key={item.name} className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-2">
-                        <div
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                        />
-                        <span>{item.name}</span>
-                      </div>
-                      <span className="font-medium">${item.value.toFixed(2)}</span>
+                  <div className="font-semibold text-sm text-muted-foreground">Transaction Breakdown:</div>
+                  {categoryData.map((item) => (
+                    <div key={item.name} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0">
+                      <span>{item.name}</span>
+                      <span className="font-medium bg-blue-100 text-blue-900 px-2 py-1 rounded">{item.count} transactions</span>
                     </div>
                   ))}
                   <div className="border-t pt-3 mt-3 flex justify-between font-semibold">
-                    <span>Total</span>
-                    <span>${categoryData.reduce((sum, item) => sum + item.value, 0).toFixed(2)}</span>
+                    <span>Total Transactions</span>
+                    <span>{categoryData.reduce((sum, item) => sum + item.count, 0)}</span>
                   </div>
                 </div>
               </CardContent>
