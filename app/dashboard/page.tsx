@@ -165,7 +165,7 @@ export default function DashboardPage() {
             >
               <Menu className="w-6 h-6" />
             </button>
-            <nav className="hidden md:flex items-center gap-6">
+            <nav className="flex items-center gap-6">
               <Link
                 href="/dashboard"
                 className="text-sm font-medium text-foreground hover:text-primary transition-colors"
