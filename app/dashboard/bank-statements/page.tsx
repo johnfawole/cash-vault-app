@@ -60,18 +60,23 @@ export default function BankStatementsPage() {
     setSuccess(null)
 
     try {
-      let content: string | Buffer
+      let content: string
       
       if (isPDF) {
-        // For PDF, we need to read as ArrayBuffer
+        // For PDF, read as ArrayBuffer and convert to Base64
         const arrayBuffer = await file.arrayBuffer()
-        content = Buffer.from(arrayBuffer)
+        const bytes = new Uint8Array(arrayBuffer)
+        let binary = ''
+        for (let i = 0; i < bytes.byteLength; i++) {
+          binary += String.fromCharCode(bytes[i])
+        }
+        content = btoa(binary) // Base64 encode
       } else {
         // For CSV, read as text
         content = await file.text()
       }
       
-      const result = await uploadBankStatement(file.name, content)
+      const result = await uploadBankStatement(file.name, content, isPDF)
       
       setSuccess(`Successfully uploaded ${result.transactionCount} transactions`)
       

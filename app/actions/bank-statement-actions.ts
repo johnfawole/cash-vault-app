@@ -86,8 +86,10 @@ function parseCSVContent(content: string): BankTransaction[] {
   return transactions
 }
 
-async function parsePDFContent(pdfBuffer: Buffer): Promise<BankTransaction[]> {
+async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
   try {
+    // Decode Base64 to Buffer
+    const pdfBuffer = Buffer.from(pdfBase64, 'base64')
     const data = await pdfParse(pdfBuffer)
     const text = data.text
     
@@ -141,33 +143,24 @@ async function parsePDFContent(pdfBuffer: Buffer): Promise<BankTransaction[]> {
   }
 }
 
-export async function uploadBankStatement(fileName: string, fileContent: string | Buffer) {
+export async function uploadBankStatement(fileName: string, fileContent: string, isPDF: boolean = false) {
   try {
     const cookieStore = await cookies()
     const supabase = createClient()
 
-    // Get authenticated user email from auth session
+    // Get authenticated user email from auth session (optional)
     const sessionCookie = cookieStore.get('cashvault_session')
-    if (!sessionCookie) {
-      throw new Error('Not authenticated')
-    }
-
-    const session = JSON.parse(sessionCookie.value)
-    const userEmail = session.email
+    const userEmail = sessionCookie ? JSON.parse(sessionCookie.value).email : 'anonymous'
 
     // Determine file type and parse accordingly
     let transactions: BankTransaction[] = []
     
-    if (fileName.endsWith('.pdf')) {
-      // Convert string to Buffer if needed
-      const pdfBuffer = typeof fileContent === 'string' 
-        ? Buffer.from(fileContent, 'binary') 
-        : fileContent
-      transactions = await parsePDFContent(pdfBuffer)
+    if (isPDF) {
+      // fileContent is Base64 encoded PDF
+      transactions = await parsePDFContent(fileContent)
     } else {
-      // Assume CSV
-      const csvContent = typeof fileContent === 'string' ? fileContent : fileContent.toString()
-      transactions = parseCSVContent(csvContent)
+      // fileContent is CSV text
+      transactions = parseCSVContent(fileContent)
     }
 
     // Insert bank statement
@@ -217,8 +210,10 @@ export async function getUserBankStatements() {
     const supabase = createClient()
 
     const sessionCookie = cookieStore.get('cashvault_session')
+    
     if (!sessionCookie) {
-      throw new Error('Not authenticated')
+      // Return empty data if not authenticated
+      return []
     }
 
     const session = JSON.parse(sessionCookie.value)
@@ -245,8 +240,10 @@ export async function getCategorySpending(statementId?: string) {
     const supabase = createClient()
 
     const sessionCookie = cookieStore.get('cashvault_session')
+    
     if (!sessionCookie) {
-      throw new Error('Not authenticated')
+      // Return empty data if not authenticated
+      return []
     }
 
     const session = JSON.parse(sessionCookie.value)
