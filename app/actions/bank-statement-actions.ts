@@ -114,17 +114,20 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
       const transactionDate = dateMatch[1]
       i++
       
-      // Next lines might be time and other info
-      // Keep reading until we find an amount (₦ symbol)
+      // Collect description and amount from following lines
       let amount = 0
       let descriptionLines: string[] = []
       let foundAmount = false
+      let linesChecked = 0
+      const maxLines = 20 // Check up to 20 lines for amount
       
-      while (i < lines.length && !foundAmount) {
+      while (i < lines.length && linesChecked < maxLines && !foundAmount) {
         const currentLine = lines[i]
         
-        // Stop if we hit another date (next transaction)
-        if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/)) break
+        // Stop if we hit another date (next transaction) BUT keep looking for amount in current batch
+        if (currentLine.match(/^\d{1,2}\/\d{1,2}\/\d{2}/) && descriptionLines.length > 0) {
+          break
+        }
         
         // Look for amount with ₦ symbol
         const amountMatch = currentLine.match(/₦\s*([\d,]+(?:\.\d{2})?)/)
@@ -135,17 +138,18 @@ async function parsePDFContent(pdfBase64: string): Promise<BankTransaction[]> {
           break
         }
         
-        // Collect non-empty lines as potential description
-        if (currentLine.length > 0 && !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/)) {
-          // Skip time lines (HH:MM:SS format)
+        // Collect lines that could be description (skip time-only lines)
+        if (currentLine.length > 2 && !currentLine.match(/^\d{1,2}:\d{1,2}:\d{1,2}$/)) {
+          // Skip pure time lines
           descriptionLines.push(currentLine)
         }
         
         i++
+        linesChecked++
       }
       
       // Only create transaction if we found both amount and some description
-      if (foundAmount && amount > 0) {
+      if (foundAmount && amount > 0 && descriptionLines.length > 0) {
         let description = descriptionLines.join(' ')
           .replace(/₦\s*[\d,]+(?:\.\d{2})?/g, '') // Remove any amounts
           .replace(/\s+/g, ' ')

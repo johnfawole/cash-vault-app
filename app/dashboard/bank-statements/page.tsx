@@ -55,35 +55,11 @@ export default function BankStatementsPage() {
       
       setSuccess(`Successfully uploaded ${result.transactionCount} transactions`)
       
-      // Group transactions by similar descriptions
-      const groupedTransactions: { [key: string]: number } = {}
-      if (result.transactions) {
-        result.transactions.forEach((transaction: any) => {
-          // Extract key phrase from description (first few words or keywords)
-          let groupKey = transaction.description
-          
-          // Try to find a recognizable pattern/keyword to group by
-          const words = transaction.description.toLowerCase().split(/[\s\/\-]+/)
-          
-          // Look for common transaction type keywords
-          for (const word of words) {
-            if (word.length > 3) {
-              groupKey = word.charAt(0).toUpperCase() + word.slice(1)
-              break
-            }
-          }
-          
-          groupedTransactions[groupKey] = (groupedTransactions[groupKey] || 0) + 1
-        })
-      }
-      
-      // Convert to chart format (count of similar transactions)
-      const chartData = Object.entries(groupedTransactions)
-        .map(([name, count]) => ({
-          name: name.substring(0, 20), // Truncate long names
-          count: count
-        }))
-        .sort((a, b) => b.count - a.count) // Sort by frequency
+      // Convert transactions to chart format - show description & amount for each
+      const chartData = result.transactions.map((transaction: any) => ({
+        name: transaction.description.substring(0, 30), // Truncate for display
+        value: transaction.amount
+      }))
       
       setCategoryData(chartData)
 
@@ -170,38 +146,40 @@ export default function BankStatementsPage() {
           {categoryData.length > 0 && (
             <Card className="lg:col-span-2">
               <CardHeader>
-                <CardTitle>Transaction Type Frequency</CardTitle>
+                <CardTitle>Transactions</CardTitle>
                 <CardDescription>
-                  Count of similar transactions grouped by description
+                  Description and amount for each transaction
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={400}>
-                  <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 0, bottom: 60 }}>
+                  <BarChart data={categoryData} margin={{ top: 20, right: 30, left: 0, bottom: 100 }}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis 
                       dataKey="name" 
                       angle={-45}
                       textAnchor="end"
-                      height={120}
+                      height={150}
+                      interval={0}
+                      tick={{ fontSize: 12 }}
                     />
-                    <YAxis label={{ value: 'Number of Transactions', angle: -90, position: 'insideLeft' }} />
-                    <Tooltip />
-                    <Bar dataKey="count" fill="#3b82f6" name="Transaction Count" />
+                    <YAxis label={{ value: 'Amount (₦)', angle: -90, position: 'insideLeft' }} />
+                    <Tooltip formatter={(value) => `₦${value.toLocaleString()}`} />
+                    <Bar dataKey="value" fill="#3b82f6" name="Amount" />
                   </BarChart>
                 </ResponsiveContainer>
 
-                <div className="mt-8 space-y-3">
-                  <div className="font-semibold text-sm text-muted-foreground">Transaction Breakdown:</div>
-                  {categoryData.map((item) => (
-                    <div key={item.name} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0">
-                      <span>{item.name}</span>
-                      <span className="font-medium bg-blue-100 text-blue-900 px-2 py-1 rounded">{item.count} transactions</span>
+                <div className="mt-8 space-y-2">
+                  <div className="font-semibold text-sm text-muted-foreground mb-3">All Transactions:</div>
+                  {categoryData.map((item, idx) => (
+                    <div key={idx} className="flex items-center justify-between text-sm border-b pb-2 last:border-b-0">
+                      <span className="truncate flex-1">{item.name}</span>
+                      <span className="font-medium bg-blue-100 text-blue-900 px-2 py-1 rounded ml-2 whitespace-nowrap">₦{item.value.toLocaleString()}</span>
                     </div>
                   ))}
-                  <div className="border-t pt-3 mt-3 flex justify-between font-semibold">
-                    <span>Total Transactions</span>
-                    <span>{categoryData.reduce((sum, item) => sum + item.count, 0)}</span>
+                  <div className="border-t pt-3 mt-4 flex justify-between font-semibold">
+                    <span>Total Amount</span>
+                    <span>₦{categoryData.reduce((sum, item) => sum + item.value, 0).toLocaleString()}</span>
                   </div>
                 </div>
               </CardContent>
