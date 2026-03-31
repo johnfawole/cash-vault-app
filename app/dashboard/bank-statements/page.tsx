@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -19,6 +19,24 @@ export default function BankStatementsPage() {
   const [statements, setStatements] = useState<any[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const router = useRouter()
+
+  // Load initial data
+  const loadData = async () => {
+    try {
+      const spending = await getCategorySpending()
+      setCategoryData(spending)
+      
+      const statements = await getUserBankStatements()
+      setStatements(statements)
+    } catch (err) {
+      console.error('[v0] Error loading data:', err)
+    }
+  }
+
+  // Load on mount
+  useEffect(() => {
+    loadData()
+  }, [])
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
@@ -62,24 +80,6 @@ export default function BankStatementsPage() {
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Load initial data
-  const loadData = async () => {
-    try {
-      const spending = await getCategorySpending()
-      setCategoryData(spending)
-      
-      const statements = await getUserBankStatements()
-      setStatements(statements)
-    } catch (err) {
-      console.error('[v0] Error loading data:', err)
-    }
-  }
-
-  // Load on mount
-  if (categoryData.length === 0 && statements.length === 0) {
-    loadData()
   }
 
   return (
