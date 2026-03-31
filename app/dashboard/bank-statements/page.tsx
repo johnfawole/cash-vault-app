@@ -42,16 +42,14 @@ export default function BankStatementsPage() {
       let content: string
       
       if (isPDF) {
-        // For PDF, read as ArrayBuffer and convert to Base64
         const arrayBuffer = await file.arrayBuffer()
         const bytes = new Uint8Array(arrayBuffer)
         let binary = ''
         for (let i = 0; i < bytes.byteLength; i++) {
           binary += String.fromCharCode(bytes[i])
         }
-        content = btoa(binary) // Base64 encode
+        content = btoa(binary)
       } else {
-        // For CSV, read as text
         content = await file.text()
       }
       
@@ -59,7 +57,6 @@ export default function BankStatementsPage() {
       
       setSuccess(`Successfully uploaded ${result.transactionCount} transactions`)
       
-      // Process transactions to calculate spending by category
       const categorySpending: { [key: string]: number } = {}
       if (result.transactions) {
         result.transactions.forEach((transaction: any) => {
@@ -68,7 +65,6 @@ export default function BankStatementsPage() {
         })
       }
       
-      // Convert to chart format
       const chartData = Object.entries(categorySpending).map(([name, value]) => ({
         name,
         value: Number(value)
@@ -76,14 +72,12 @@ export default function BankStatementsPage() {
       
       setCategoryData(chartData)
 
-      // Reset file input
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to upload bank statement'
       setError(errorMessage)
-      console.error('[v0] Upload error:', err)
     } finally {
       setIsLoading(false)
     }
@@ -92,7 +86,6 @@ export default function BankStatementsPage() {
   return (
     <main className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="mb-8">
           <Link href="/dashboard">
             <Button variant="ghost" size="sm" className="mb-4">
@@ -106,7 +99,6 @@ export default function BankStatementsPage() {
           </p>
         </div>
 
-        {/* File Upload Section */}
         <Card className="mb-8">
           <CardHeader>
             <CardTitle>Upload Bank Statement</CardTitle>
@@ -159,9 +151,7 @@ export default function BankStatementsPage() {
           </CardContent>
         </Card>
 
-        {/* Charts and Data Section */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Pie Chart */}
           {categoryData.length > 0 && (
             <Card>
               <CardHeader>
@@ -192,7 +182,6 @@ export default function BankStatementsPage() {
                   </PieChart>
                 </ResponsiveContainer>
 
-                {/* Summary Stats */}
                 <div className="mt-8 space-y-3">
                   <div className="font-semibold text-sm text-muted-foreground">Category Breakdown:</div>
                   {categoryData.map((item, index) => (
@@ -216,7 +205,6 @@ export default function BankStatementsPage() {
             </Card>
           )}
 
-          {/* Empty State */}
           {categoryData.length === 0 && (
             <Card>
               <CardContent className="pt-8 text-center">
