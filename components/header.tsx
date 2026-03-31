@@ -4,7 +4,6 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Lock, Wallet } from 'lucide-react'
 import Link from "next/link"
-import { getConnectedAddress, connectWallet, onAccountsChanged } from "@/lib/walletConnector"
 
 export function Header() {
   const [isWalletConnected, setIsWalletConnected] = useState(false)
@@ -15,24 +14,39 @@ export function Header() {
     let isMounted = true
     
     const checkWalletConnection = async () => {
-      const address = await getConnectedAddress()
-      console.log("[v0] Wallet check result:", address)
-      if (isMounted) {
-        setIsWalletConnected(!!address)
+      try {
+        const { getConnectedAddress } = await import("@/lib/walletConnector")
+        const address = await getConnectedAddress()
+        console.log("[v0] Wallet check result:", address)
+        if (isMounted) {
+          setIsWalletConnected(!!address)
+        }
+      } catch (err) {
+        console.error("[v0] Error checking wallet:", err)
       }
     }
 
     checkWalletConnection()
 
     // Listen for account changes
-    const unsubscribe = onAccountsChanged((accounts) => {
-      console.log("[v0] Accounts changed event:", accounts)
-      if (isMounted) {
-        // Only show as connected if accounts array has items AND they're valid
-        const isConnected = Array.isArray(accounts) && accounts.length > 0
-        setIsWalletConnected(isConnected)
+    let unsubscribe: (() => void) | null = null
+    
+    const setupListener = async () => {
+      try {
+        const { onAccountsChanged } = await import("@/lib/walletConnector")
+        unsubscribe = onAccountsChanged((accounts) => {
+          console.log("[v0] Accounts changed event:", accounts)
+          if (isMounted) {
+            const isConnected = Array.isArray(accounts) && accounts.length > 0
+            setIsWalletConnected(isConnected)
+          }
+        })
+      } catch (err) {
+        console.error("[v0] Error setting up listener:", err)
       }
-    })
+    }
+    
+    setupListener()
 
     // Recheck when page regains focus
     const handleVisibilityChange = () => {
@@ -48,26 +62,20 @@ export function Header() {
       isMounted = false
       document.removeEventListener("visibilitychange", handleVisibilityChange)
       window.removeEventListener("focus", checkWalletConnection)
-      unsubscribe()
+      if (unsubscribe) unsubscribe()
     }
   }, [])
 
   const handleConnectWallet = async () => {
     setIsConnecting(true)
     try {
+      const { connectWallet } = await import("@/lib/walletConnector")
       await connectWallet()
       setIsWalletConnected(true)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to connect wallet"
       console.error("[v0] Wallet connection error:", errorMessage)
       
-      // Don't show alert if redirecting to MetaMask on mobile
-      if (errorMessage.includes("Redirecting")) {
-        console.log("[v0] Redirecting to MetaMask, hiding error")
-        return
-      }
-      
-      // Show error for desktop or if wallet not available
       if (!errorMessage.includes("Redirecting")) {
         alert(errorMessage)
       }
