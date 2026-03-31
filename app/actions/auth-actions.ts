@@ -216,6 +216,11 @@ export async function getAuthIdentifier(): Promise<string | null> {
     return null
   }
 }
+
+/**
+ * Store Google auth session in HTTP-only cookie
+ */
+export async function setGoogleAuthSession(googleId: string, email: string, name: string) {
   const cookieStore = await cookies()
   const session = {
     type: 'google',
