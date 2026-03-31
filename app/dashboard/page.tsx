@@ -159,7 +159,11 @@ export default function DashboardPage() {
             <Menu className="w-6 h-6" />
           </button>
           <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground font-mono">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+            <span className="text-sm text-muted-foreground font-mono">
+              {walletAddress && walletAddress.length > 10 
+                ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}`
+                : walletAddress}
+            </span>
             <Button onClick={handleLogout} variant="ghost" size="sm">
               <LogOut className="w-4 h-4" />
             </Button>
@@ -177,7 +181,7 @@ export default function DashboardPage() {
                 </div>
                 {lastUpdated && (
                   <div className="text-right text-sm text-muted-foreground">
-                    <p>Updated {Math.round((new Date().getTime() - lastUpdated.getTime()) / 1000)}s ago</p>
+                    <p suppressHydrationWarning>Updated {Math.round((new Date().getTime() - lastUpdated.getTime()) / 1000)}s ago</p>
                   </div>
                 )}
               </div>
