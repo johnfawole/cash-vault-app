@@ -216,48 +216,17 @@ export default function BankStatementsPage() {
             </Card>
           )}
 
-          {/* Recent Uploads */}
-          {statements.length > 0 && (
+          {/* Empty State */}
+          {categoryData.length === 0 && (
             <Card>
-              <CardHeader>
-                <CardTitle>Recent Uploads</CardTitle>
-                <CardDescription>
-                  Your bank statement history
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {statements.map((statement) => (
-                    <div
-                      key={statement.id}
-                      className="p-3 border rounded-lg hover:bg-muted/50 transition-colors"
-                    >
-                      <p className="font-medium text-sm truncate">{statement.file_name}</p>
-                      <div className="flex justify-between text-xs text-muted-foreground mt-1">
-                        <span>{statement.transaction_count} transactions</span>
-                        <span>${statement.total_amount?.toFixed(2) || '0.00'}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {new Date(statement.created_at).toLocaleDateString()}
-                      </p>
-                    </div>
-                  ))}
-                </div>
+              <CardContent className="pt-8 text-center">
+                <p className="text-muted-foreground mb-4">No bank statements uploaded yet</p>
+                <p className="text-sm text-muted-foreground">
+                  Upload your first bank statement CSV or PDF to get started
+                </p>
               </CardContent>
             </Card>
           )}
-        </div>
-
-        {categoryData.length === 0 && statements.length === 0 && (
-          <Card>
-            <CardContent className="pt-8 text-center">
-              <p className="text-muted-foreground mb-4">No bank statements uploaded yet</p>
-              <p className="text-sm text-muted-foreground">
-                Upload your first bank statement CSV to get started
-              </p>
-            </CardContent>
-          </Card>
-        )}
       </div>
     </main>
   )
