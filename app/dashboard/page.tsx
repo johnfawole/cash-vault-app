@@ -158,12 +158,28 @@ export default function DashboardPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Header */}
         <header className="bg-card border-b border-border px-4 md:px-8 py-4 flex items-center justify-between">
-          <button
-            className="md:hidden"
-            onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
+          <div className="flex items-center gap-6">
+            <button
+              className="md:hidden"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+            >
+              <Menu className="w-6 h-6" />
+            </button>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/bank-statements"
+                className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                Bank Statements
+              </Link>
+            </nav>
+          </div>
           <div className="flex items-center gap-4">
             <span className="text-sm text-muted-foreground font-mono">
               {walletAddress && walletAddress.length > 10 
