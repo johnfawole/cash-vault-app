@@ -21,7 +21,7 @@ export async function sendEmail(payload: EmailPayload) {
     // Use plain text as primary, with HTML as fallback
     const content = {
       to: payload.to,
-      from: 'CashVault <notifications@cashvault.app>',
+      from: 'John at CashVault <john@cashvault.com>',
       subject: payload.subject,
       ...(payload.text && { text: payload.text }),
       ...(payload.html && { html: payload.html }),
