@@ -1,15 +1,22 @@
+'use client'
+
 import { testPlanCreatedEmail, testPlanFundedEmail, testPlanWithdrawnEmail } from '@/app/actions/email-test'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useState } from 'react'
 
 export default function EmailTestPage() {
-  async function handleTestEmail(type: 'created' | 'funded' | 'withdrawn', email: string) {
+  const [email, setEmail] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  async function handleTestEmail(type: 'created' | 'funded' | 'withdrawn') {
     if (!email) {
       alert('Please enter an email address')
       return
     }
 
+    setLoading(true)
     try {
       let result
       if (type === 'created') {
@@ -27,6 +34,8 @@ export default function EmailTestPage() {
       }
     } catch (error) {
       alert(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`)
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -45,45 +54,40 @@ export default function EmailTestPage() {
               <div>
                 <label className="block text-sm font-medium mb-2">Test Email Address</label>
                 <Input
-                  id="test-email"
                   type="email"
                   placeholder="test@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="mb-4"
                 />
               </div>
 
               <div className="space-y-3">
                 <Button
-                  onClick={() => {
-                    const email = (document.getElementById('test-email') as HTMLInputElement).value
-                    handleTestEmail('created', email)
-                  }}
+                  onClick={() => handleTestEmail('created')}
+                  disabled={loading}
                   className="w-full"
                   variant="outline"
                 >
-                  Send Plan Created Email
+                  {loading ? 'Sending...' : 'Send Plan Created Email'}
                 </Button>
 
                 <Button
-                  onClick={() => {
-                    const email = (document.getElementById('test-email') as HTMLInputElement).value
-                    handleTestEmail('funded', email)
-                  }}
+                  onClick={() => handleTestEmail('funded')}
+                  disabled={loading}
                   className="w-full"
                   variant="outline"
                 >
-                  Send Plan Funded Email
+                  {loading ? 'Sending...' : 'Send Plan Funded Email'}
                 </Button>
 
                 <Button
-                  onClick={() => {
-                    const email = (document.getElementById('test-email') as HTMLInputElement).value
-                    handleTestEmail('withdrawn', email)
-                  }}
+                  onClick={() => handleTestEmail('withdrawn')}
+                  disabled={loading}
                   className="w-full"
                   variant="outline"
                 >
-                  Send Plan Withdrawn Email
+                  {loading ? 'Sending...' : 'Send Plan Withdrawn Email'}
                 </Button>
               </div>
 
@@ -99,7 +103,7 @@ export default function EmailTestPage() {
             </CardHeader>
             <CardContent className="space-y-2 text-sm">
               <p>
-                <strong>From Email:</strong> notifications@cashvault.app
+                <strong>From Email:</strong> johnfawole123@gmail.com
               </p>
               <p>
                 <strong>Service:</strong> Resend
