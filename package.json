@@ -48,6 +48,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@react-email/render": "latest",
     "@react-native-async-storage/async-storage": "latest",
+    "@react-native/jest-preset": "latest",
     "@supabase/ssr": "0.9.0",
     "@supabase/supabase-js": "latest",
     "@vercel/analytics": "1.3.1",
