@@ -48,20 +48,25 @@ export async function saveDCAPlan(
 
     console.log('[v0] DCA plan saved:', data)
 
-    // Send plan created email if email is provided
+    // Send plan created email if email is provided (non-blocking)
     if (userEmail && data && data.length > 0) {
-      const plan = data[0]
-      const emailResult = await sendPlanCreatedEmail({
-        recipientName: userEmail,
-        assetSymbol: assetSymbol,
-        planId: planId,
-        createdDate: new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }),
-      })
-      console.log('[v0] Plan created email result:', emailResult)
+      try {
+        const plan = data[0]
+        const emailResult = await sendPlanCreatedEmail({
+          recipientName: userEmail,
+          assetSymbol: assetSymbol,
+          planId: planId,
+          createdDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          }),
+        })
+        console.log('[v0] Plan created email result:', emailResult)
+      } catch (emailError) {
+        // Don't block the transaction if email fails
+        console.error('[v0] Error sending plan created email:', emailError)
+      }
     }
 
     return { data, error: null }
@@ -107,23 +112,28 @@ export async function withdrawFromDCAPlan(planId: number, withdrawalAmount: numb
 
     console.log('[v0] DCA plan withdrawal processed:', data)
 
-    // Send withdrawal email if email is provided
+    // Send withdrawal email if email is provided (non-blocking)
     if (userEmail && data && data.length > 0) {
-      const emailResult = await sendPlanWithdrawnEmail({
-        recipientName: userEmail,
-        assetSymbol: assetSymbol,
-        amountWithdrawn: withdrawalAmount,
-        remainingBalance: remainingBalance,
-        planId: planId,
-        withdrawalDate: new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      })
-      console.log('[v0] Plan withdrawal email result:', emailResult)
+      try {
+        const emailResult = await sendPlanWithdrawnEmail({
+          recipientName: userEmail,
+          assetSymbol: assetSymbol,
+          amountWithdrawn: withdrawalAmount,
+          remainingBalance: remainingBalance,
+          planId: planId,
+          withdrawalDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        })
+        console.log('[v0] Plan withdrawal email result:', emailResult)
+      } catch (emailError) {
+        // Don't block the transaction if email fails
+        console.error('[v0] Error sending plan withdrawal email:', emailError)
+      }
     }
 
     return { data, error: null }
@@ -188,23 +198,28 @@ export async function updateDCAPlanFunding(planId: number, amount: number, userE
 
     console.log('[v0] DCA plan funding updated:', data)
 
-    // Send plan funded email if email is provided
+    // Send plan funded email if email is provided (non-blocking)
     if (userEmail && data && data.length > 0) {
-      const emailResult = await sendPlanFundedEmail({
-        recipientName: userEmail,
-        assetSymbol: assetSymbol,
-        amountDeposited: amount,
-        newBalance: newBalance,
-        planId: planId,
-        transactionDate: new Date().toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-          hour: '2-digit',
-          minute: '2-digit',
-        }),
-      })
-      console.log('[v0] Plan funded email result:', emailResult)
+      try {
+        const emailResult = await sendPlanFundedEmail({
+          recipientName: userEmail,
+          assetSymbol: assetSymbol,
+          amountDeposited: amount,
+          newBalance: newBalance,
+          planId: planId,
+          transactionDate: new Date().toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          }),
+        })
+        console.log('[v0] Plan funded email result:', emailResult)
+      } catch (emailError) {
+        // Don't block the transaction if email fails
+        console.error('[v0] Error sending plan funded email:', emailError)
+      }
     }
 
     return { data, error: null }
