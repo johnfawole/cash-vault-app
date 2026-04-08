@@ -132,6 +132,8 @@ export async function withdrawFromDCAPlan(planId: number, withdrawalAmount: numb
     return { data: null, error }
   }
 }
+
+export async function getUserDCAPlans(userId: string) {
   const supabase = await createClient()
 
   try {
