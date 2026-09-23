@@ -1,0 +1,88 @@
+Progress: resolved 0, reused 1, downloaded 0, added 0
+Progress: resolved 39, reused 38, downloaded 0, added 0
+
+   ╭──────────────────────────────────────────────────────────────────╮
+   │                                                                  │
+   │                Update available! 9.12.3 → 12.5.1.                │
+   │   Changelog: https://github.com/pnpm/pnpm/releases/tag/v12.5.1   │
+   │                Run "pnpm add -g pnpm" to update.                 │
+   │                                                                  │
+   │         Follow @pnpmjs for updates: https://x.com/pnpmjs         │
+   │                                                                  │
+   ╰──────────────────────────────────────────────────────────────────╯
+
+Progress: resolved 39, reused 39, downloaded 0, added 0
+Progress: resolved 53, reused 49, downloaded 3, added 0
+ WARN  deprecated @privy-io/server-auth@1.32.5: This package is deprecated. If you are looking for the latest features and support, use @privy-io/node instead.
+Progress: resolved 58, reused 49, downloaded 8, added 0
+Progress: resolved 58, reused 49, downloaded 9, added 0
+Progress: resolved 63, reused 49, downloaded 13, added 0
+Progress: resolved 66, reused 50, downloaded 15, added 0
+Progress: resolved 68, reused 50, downloaded 17, added 0
+Progress: resolved 71, reused 50, downloaded 20, added 0
+Progress: resolved 72, reused 50, downloaded 21, added 0
+Progress: resolved 74, reused 50, downloaded 23, added 0
+Progress: resolved 76, reused 50, downloaded 25, added 0
+Progress: resolved 76, reused 50, downloaded 26, added 0
+Progress: resolved 77, reused 50, downloaded 26, added 0
+Progress: resolved 77, reused 50, downloaded 27, added 0
+Progress: resolved 77, reused 50, downloaded 28, added 0
+Progress: resolved 78, reused 50, downloaded 28, added 0
+Progress: resolved 78, reused 50, downloaded 29, added 0
+Progress: resolved 79, reused 50, downloaded 29, added 0
+Progress: resolved 79, reused 50, downloaded 30, added 0
+Progress: resolved 80, reused 50, downloaded 30, added 0
+Progress: resolved 80, reused 50, downloaded 31, added 0
+Progress: resolved 81, reused 50, downloaded 31, added 0
+Progress: resolved 81, reused 50, downloaded 32, added 0
+Progress: resolved 82, reused 50, downloaded 32, added 0
+Progress: resolved 82, reused 50, downloaded 33, added 0
+Progress: resolved 83, reused 50, downloaded 33, added 0
+ WARN  GET https://registry.npmjs.org/pdf-parse/-/pdf-parse-1.1.1.tgz error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+Progress: resolved 83, reused 50, downloaded 34, added 0
+Progress: resolved 84, reused 50, downloaded 34, added 0
+ WARN  GET https://registry.npmjs.org/thirdweb/-/thirdweb-5.119.3.tgz error (ECONNRESET). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/thirdweb/-/thirdweb-5.119.3.tgz error (ECONNRESET). Will retry in 1 minute. 1 retries left.
+Progress: resolved 84, reused 50, downloaded 35, added 0
+Progress: resolved 85, reused 50, downloaded 35, added 0
+Progress: resolved 85, reused 50, downloaded 36, added 0
+Progress: resolved 86, reused 50, downloaded 36, added 0
+Progress: resolved 86, reused 50, downloaded 37, added 0
+Progress: resolved 146, reused 107, downloaded 37, added 0
+Progress: resolved 172, reused 134, downloaded 37, added 0
+Progress: resolved 173, reused 135, downloaded 37, added 0
+ WARN  GET https://registry.npmjs.org/rollup error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fwebpack-plugin error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fconventions error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fbundler-plugin-core error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fcore error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fbrowser-utils error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@tailwindcss/node/-/node-4.2.2.tgz error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fopentelemetry error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@rollup%2Fplugin-commonjs error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/stacktrace-parser error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fvercel-edge error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Freact error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@opentelemetry%2Fapi error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fnode error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fserver-utils error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.2.2.tgz error (ETIMEDOUT). Will retry in 10 seconds. 2 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fwebpack-plugin error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/rollup error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fbundler-plugin-core error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fbrowser-utils error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@rollup%2Fplugin-commonjs error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fconventions error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fcore error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@tailwindcss/node/-/node-4.2.2.tgz error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fopentelemetry error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/stacktrace-parser error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fvercel-edge error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Freact error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@opentelemetry%2Fapi error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fnode error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@sentry%2Fserver-utils error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ WARN  GET https://registry.npmjs.org/@tailwindcss/oxide/-/oxide-4.2.2.tgz error (ETIMEDOUT). Will retry in 1 minute. 1 retries left.
+ ERR_PNPM_META_FETCH_FAIL  GET https://registry.npmjs.org/@sentry%2Fwebpack-plugin: request to https://registry.npmjs.org/@sentry%2Fwebpack-plugin failed, reason: 
+
+This error happened while installing the dependencies of @sentry/nextjs@10.75.2
