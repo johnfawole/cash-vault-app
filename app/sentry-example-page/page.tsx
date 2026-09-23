@@ -84,6 +84,8 @@ export default function Page() {
                 }
               },
             );
+            // Intentional runtime error for Seer/Sentry testing.
+            myUndefinedFunction();
             throw new SentryExampleFrontendError(
               "This error is raised on the frontend of the example page.",
             );
